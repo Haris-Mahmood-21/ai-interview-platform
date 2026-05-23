@@ -5,7 +5,10 @@ from sqlalchemy.orm import Session
 from app.dependencies.auth import get_current_user
 from app.dependencies.db import get_db
 from app.models.user import User
-from app.services.followup_generator import generate_followup_questions
+from app.services.followup_generator import (
+    generate_followup_questions,
+    should_ask_followup,
+)
 from app.services.rag_evaluator import evaluate_theory_answer
 
 router = APIRouter(prefix="/theory", tags=["Theory Evaluation"])
@@ -20,6 +23,7 @@ class TheoryEvaluationRequest(BaseModel):
 class TheoryEvaluationResponse(BaseModel):
     evaluation: dict
     followup_questions: list[str]
+    has_followups: bool          # frontend uses this to know whether to show follow-up UI
     total_score: float
 
 
@@ -62,5 +66,6 @@ def evaluate_theory(
     return TheoryEvaluationResponse(
         evaluation=evaluation,
         followup_questions=followups,
+        has_followups=len(followups) > 0,
         total_score=evaluation.get("total_score", 0),
     )
