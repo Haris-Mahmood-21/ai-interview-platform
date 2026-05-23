@@ -1,0 +1,71 @@
+SUPERVISED LEARNING
+Supervised learning trains a model on labelled data (input-output pairs) to predict outputs for new inputs.
+
+Regression: predict continuous values. Algorithms: linear regression, polynomial regression, ridge, lasso.
+Classification: predict discrete classes. Algorithms: logistic regression, decision trees, SVM, k-NN, naive Bayes, neural networks.
+
+Loss functions:
+MSE (Mean Squared Error): for regression. Penalizes large errors heavily.
+Cross-entropy: for classification. Measures difference between predicted probabilities and true labels.
+
+Gradient descent: iteratively update parameters in the direction of steepest descent of the loss. Learning rate controls step size. Variants: batch, stochastic (SGD), mini-batch.
+
+OVERFITTING AND UNDERFITTING
+Overfitting: model memorizes training data, performs poorly on new data. High variance.
+Underfitting: model too simple, fails to capture patterns. High bias.
+
+Bias-variance tradeoff: increasing model complexity reduces bias but increases variance.
+
+Regularization techniques to prevent overfitting:
+L1 (Lasso): adds sum of absolute weights to loss. Produces sparse models (some weights become zero).
+L2 (Ridge): adds sum of squared weights. Shrinks weights uniformly.
+Dropout: randomly deactivate neurons during training. Used in neural networks.
+Early stopping: stop training when validation loss stops improving.
+
+DECISION TREES AND ENSEMBLES
+Decision tree: splits data based on features to minimize impurity (Gini index or entropy). Prone to overfitting.
+
+Random forest: ensemble of decision trees trained on random subsets of data and features. Reduces variance through averaging. Robust and accurate.
+
+Gradient boosting (XGBoost, LightGBM): builds trees sequentially, each correcting errors of the previous. High accuracy, slower to train.
+
+Bagging vs Boosting: bagging trains models in parallel on random subsets (reduces variance); boosting trains sequentially, focusing on hard examples (reduces bias).
+
+NEURAL NETWORKS
+A neural network consists of layers of neurons. Each neuron computes a weighted sum of inputs and applies an activation function.
+
+Activation functions:
+ReLU: max(0, x). Most common for hidden layers. Avoids vanishing gradient.
+Sigmoid: outputs (0,1). Used for binary classification output.
+Softmax: outputs probability distribution. Used for multiclass output.
+Tanh: outputs (-1,1). Zero-centered, better than sigmoid for hidden layers.
+
+Backpropagation: computes gradients of loss with respect to weights using chain rule. Used to update weights via gradient descent.
+
+Vanishing gradient: gradients become very small in deep networks, making early layers learn slowly. Solved by ReLU, batch normalization, residual connections.
+
+CNN (Convolutional Neural Network): uses convolutional layers to extract spatial features. Used for image recognition.
+RNN (Recurrent Neural Network): processes sequential data. LSTM and GRU solve the vanishing gradient problem in RNNs.
+Transformer: attention-based architecture. Basis for BERT, GPT. Handles long-range dependencies better than RNNs.
+
+EVALUATION METRICS
+Classification metrics:
+Accuracy: correct predictions / total. Misleading for imbalanced datasets.
+Precision: TP / (TP + FP). Of predicted positives, how many are truly positive.
+Recall (Sensitivity): TP / (TP + FN). Of actual positives, how many were found.
+F1 Score: harmonic mean of precision and recall. Balances both.
+ROC-AUC: area under the ROC curve. Measures model's ability to distinguish classes.
+
+Regression metrics: MAE, MSE, RMSE, R-squared.
+
+Cross-validation: k-fold splits data into k subsets, trains k models each on k-1 folds, evaluates on the remaining fold. Gives reliable estimate of generalization performance.
+
+UNSUPERVISED LEARNING
+Clustering: group similar data points without labels.
+K-means: assign points to k clusters based on distance to centroids. Sensitive to initialization and outliers.
+DBSCAN: density-based clustering. Handles arbitrary shapes and noise.
+Hierarchical clustering: builds a tree (dendrogram) of clusters.
+
+Dimensionality reduction:
+PCA (Principal Component Analysis): finds directions of maximum variance. Reduces dimensions while preserving most information.
+t-SNE: non-linear dimensionality reduction for visualization.

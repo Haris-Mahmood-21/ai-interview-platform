@@ -1,0 +1,89 @@
+ARRAYS AND STRINGS
+An array is a collection of elements stored at contiguous memory locations. Arrays allow O(1) random access by index. Insertion and deletion at arbitrary positions take O(n) time due to shifting. Dynamic arrays (like Python lists) resize automatically, typically doubling in size, giving amortized O(1) append.
+
+Common array techniques: two pointers, sliding window, prefix sums.
+Two pointers: use two indices moving toward each other or in the same direction to solve problems in O(n) instead of O(n^2). Example: finding pairs that sum to a target.
+Sliding window: maintain a window of elements satisfying a condition, expanding or shrinking it as needed. Useful for subarray/substring problems.
+Prefix sums: precompute cumulative sums so range sum queries take O(1) instead of O(n).
+
+LINKED LISTS
+A linked list is a sequence of nodes where each node contains data and a pointer to the next node. Singly linked lists support O(1) insertion/deletion at the head. Doubly linked lists support O(1) insertion/deletion at both ends. Random access takes O(n).
+
+Common operations: reverse a linked list (iterative and recursive), detect cycles using Floyd's algorithm (slow and fast pointers), find the middle node, merge two sorted lists.
+
+Floyd's cycle detection: use two pointers, one moving one step at a time (slow) and one moving two steps (fast). If they meet, a cycle exists.
+
+STACKS AND QUEUES
+A stack is LIFO (Last In First Out). Operations: push, pop, peek — all O(1). Use cases: function call stack, undo operations, balanced parentheses checking, monotonic stack problems.
+
+A queue is FIFO (First In First Out). Operations: enqueue, dequeue — O(1) with a deque. Use cases: BFS traversal, task scheduling, sliding window maximum.
+
+Monotonic stack: a stack where elements are always in increasing or decreasing order. Used to find next greater element, largest rectangle in histogram.
+
+TREES
+A binary tree has nodes with at most two children. A binary search tree (BST) maintains the property: left child < parent < right child, enabling O(log n) search, insert, delete on average.
+
+Tree traversals:
+- Inorder (left, root, right): produces sorted output for BST
+- Preorder (root, left, right): used to copy a tree
+- Postorder (left, right, root): used to delete a tree
+- Level order (BFS): uses a queue, processes nodes level by level
+
+Balanced trees (AVL, Red-Black) maintain O(log n) height. An unbalanced BST degrades to O(n).
+
+HEAPS
+A heap is a complete binary tree satisfying the heap property. Min-heap: parent <= children. Max-heap: parent >= children. The root holds the minimum (or maximum) element.
+
+Operations: insert O(log n), extract-min/max O(log n), peek O(1), build heap O(n).
+Use cases: priority queues, heap sort, finding kth largest/smallest element, Dijkstra's algorithm.
+
+Python's heapq module implements a min-heap. To simulate a max-heap, negate the values.
+
+HASH TABLES
+A hash table maps keys to values using a hash function. Average case: O(1) insert, delete, lookup. Worst case (all keys collide): O(n).
+
+Collision resolution: chaining (linked list at each bucket) or open addressing (linear probing, quadratic probing).
+Load factor: ratio of elements to buckets. Rehashing occurs when load factor exceeds a threshold (typically 0.75).
+
+Use cases: frequency counting, two-sum problem, anagram detection, caching.
+
+GRAPHS
+A graph G = (V, E) consists of vertices and edges. Directed vs undirected. Weighted vs unweighted. Representations: adjacency matrix O(V^2) space, adjacency list O(V+E) space.
+
+BFS (Breadth First Search): uses a queue, explores level by level. Time O(V+E). Use cases: shortest path in unweighted graph, level order traversal, cycle detection in undirected graph.
+
+DFS (Depth First Search): uses a stack (or recursion). Time O(V+E). Use cases: topological sort, cycle detection, connected components, maze solving.
+
+Topological sort: linear ordering of vertices such that for every edge u→v, u comes before v. Only possible for DAGs (directed acyclic graphs). Algorithms: Kahn's algorithm (BFS-based), DFS-based.
+
+Dijkstra's algorithm: finds shortest path from source to all vertices in a weighted graph with non-negative edges. Time O((V+E) log V) with a min-heap.
+
+SORTING ALGORITHMS
+Bubble sort: O(n^2) time, O(1) space. Simple but inefficient.
+Selection sort: O(n^2) time, O(1) space.
+Insertion sort: O(n^2) worst case, O(n) best case. Efficient for small or nearly sorted arrays.
+Merge sort: O(n log n) time, O(n) space. Stable. Divide and conquer.
+Quick sort: O(n log n) average, O(n^2) worst case, O(log n) space. In-place. Fastest in practice.
+Heap sort: O(n log n) time, O(1) space. Not stable.
+Counting/Radix sort: O(n+k) time. For integers with bounded range.
+
+DYNAMIC PROGRAMMING
+Dynamic programming solves problems by breaking them into overlapping subproblems and storing results (memoization or tabulation).
+
+Key steps: identify subproblems, define recurrence relation, determine base cases, decide top-down (memoization) or bottom-up (tabulation).
+
+Classic problems: Fibonacci, 0/1 knapsack, longest common subsequence (LCS), longest increasing subsequence (LIS), coin change, edit distance, matrix chain multiplication.
+
+Time complexity typically trades space for time: O(n^2) time with O(n^2) space for 2D DP problems.
+
+BIG O NOTATION
+Big O describes the upper bound of an algorithm's time or space complexity as input size n grows.
+O(1): constant — hash table lookup
+O(log n): logarithmic — binary search
+O(n): linear — single loop
+O(n log n): linearithmic — merge sort
+O(n^2): quadratic — nested loops
+O(2^n): exponential — recursive fibonacci without memoization
+O(n!): factorial — permutation generation
+
+Space complexity counts auxiliary space used by the algorithm, not including input.

@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import auth, resume
+from app.routers import auth, resume, theory
 
 app = FastAPI(
     title="AI Interview Platform",
@@ -18,9 +18,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Routers
 app.include_router(auth.router)
 app.include_router(resume.router)
+app.include_router(theory.router)
 
 
 @app.get("/health")
