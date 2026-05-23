@@ -5,7 +5,7 @@ description = "AI Interview Platform Backend"
 authors = [
     {name = "Your Name"}
 ]
-requires-python = "^3.11"
+requires-python = ">=3.11,<3.12"
 dependencies = [
     "pydantic-settings (>=2.14.1,<3.0.0)",
     "alembic (>=1.18.4,<2.0.0)",
@@ -16,6 +16,9 @@ dependencies = [
     "python-jose[cryptography] (>=3.5.0,<4.0.0)",
     "passlib[bcrypt] (>=1.7.4,<2.0.0)",
     "bcrypt (==4.0.1)",
+    "pymupdf (>=1.27.2.3,<2.0.0.0)",
+    "spacy (>=3.8.14,<4.0.0)",
+    "python-multipart (>=0.0.29,<0.0.30)",
 ]
 
 
