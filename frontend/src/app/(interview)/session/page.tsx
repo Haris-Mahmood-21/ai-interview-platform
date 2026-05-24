@@ -226,7 +226,13 @@ export default function SessionPage() {
             />
           </div>
 
-          <span className="text-xs text-gray-500 capitalize">{category}</span>
+          <span className="text-xs text-gray-500 capitalize">
+            {category}
+          </span>
+
+          <span className="text-xs text-gray-600">
+            AI-generated · adapts to your level
+          </span>
         </div>
       </div>
 

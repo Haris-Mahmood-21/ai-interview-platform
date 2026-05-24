@@ -3,12 +3,12 @@ from typing import Optional
 
 
 class QuestionOut(BaseModel):
-    id: int | str       # str for AI-generated questions
+    id: int | str
     type: str
     difficulty: str
     question_text: str
     test_cases: Optional[list | str] = None
-    source: str = "bank"
+    source: str = "ai_generated"
 
     class Config:
         from_attributes = True
@@ -16,19 +16,20 @@ class QuestionOut(BaseModel):
 
 class InterviewPaperResponse(BaseModel):
     paper_id: int
-    source: str         # general or resume
+    source: str
     category: str = ""
+    difficulty: str = "medium"
     questions: list[QuestionOut]
 
 
 class CodeSubmissionRequest(BaseModel):
-    question_id: int
+    question_id: str | int        # now supports "llm_0" style IDs
     source_code: str
-    language: str       # python, javascript, java, cpp
+    language: str
 
 
 class CodeSubmissionResponse(BaseModel):
-    question_id: int
+    question_id: str | int
     results: list[dict]
     score: float
     passed_count: int

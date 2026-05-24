@@ -62,7 +62,10 @@ useEffect(() => {
 
   const handleStart = async () => {
     if (!category) { setError("Please select a domain."); return; }
-    if (mode === "resume" && !uploadDone) { setError("Please upload your resume for resume mode."); return; }
+    if (mode === "resume" && !uploadDone) {
+      setError("Please upload your resume for resume mode.");
+      return;
+    }
     setError("");
     setLoading(true);
     try {
@@ -70,7 +73,10 @@ useEffect(() => {
       setPaper(data.paper_id, data.category, mode, data.questions);
       router.push("/session");
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Failed to generate interview. Try again.");
+      setError(
+        err.response?.data?.detail ||
+        "Failed to generate interview. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -202,7 +208,17 @@ useEffect(() => {
           disabled={loading || !category}
           className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-gray-800 disabled:text-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-xl py-3 text-sm transition-colors"
         >
-          {loading ? "Generating your interview paper..." : "Start Interview →"}
+          {loading ? (
+            <span className="flex items-center justify-center gap-2">
+              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+              </svg>
+              Generating your personalized interview...
+            </span>
+          ) : (
+            "Start Interview →"
+          )}
         </button>
       </div>
     </div>
