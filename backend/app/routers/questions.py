@@ -15,11 +15,11 @@ from app.services.scoring_service import calculate_total_score
 
 router = APIRouter(prefix="/questions", tags=["Question Generation"])
 
-VALID_CATEGORIES = {"dsa", "os", "ml", "web"}
+VALID_CATEGORIES = {"dsa", "oop", "ml", "react"}
 
 
 class GeneratePaperRequest(BaseModel):
-    category: str       # dsa, os, ml, web
+    category: str       # dsa, opp, ml, react
     mode: str           # general, resume
 
 

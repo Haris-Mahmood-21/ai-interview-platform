@@ -1,15 +1,15 @@
 const DOMAIN_ICONS: Record<string, string> = {
-  dsa: "🧮",
-  os: "⚙️",
+  dsa: "🧠",
+  oop: "🧩",
   ml: "🤖",
-  web: "🌐",
+  react: "⚛️",
 };
 
 const DOMAIN_LABELS: Record<string, string> = {
   dsa: "Data Structures & Algorithms",
-  os: "Operating Systems",
+  oop: "Object-Oriented Programming",
   ml: "Machine Learning",
-  web: "Web Development",
+  react: "React & Frontend",
 };
 
 interface DomainStat {

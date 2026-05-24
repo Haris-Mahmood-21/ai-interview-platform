@@ -15,7 +15,7 @@ interface AttemptSummary {
 }
 
 const DOMAIN_ICONS: Record<string, string> = {
-  dsa: "🧮", os: "⚙️", ml: "🤖", web: "🌐",
+  dsa: "🧠", oop: "🧩", ml: "🤖", react: "⚛️",
 };
 
 function formatTime(seconds: number): string {

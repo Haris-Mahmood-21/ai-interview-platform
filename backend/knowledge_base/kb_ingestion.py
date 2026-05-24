@@ -14,9 +14,9 @@ CHUNK_OVERLAP = 50  # overlap between chunks for context continuity
 # Map folder names to domain labels
 DOMAIN_MAP = {
     "dsa": "Data Structures and Algorithms",
-    "os": "Operating Systems",
+    "oop": "Object-Oriented Programming",
     "ml": "Machine Learning",
-    "web": "Web Development",
+    "react": "React and Frontend Development",
 }
 
 model = SentenceTransformer(EMBEDDING_MODEL)

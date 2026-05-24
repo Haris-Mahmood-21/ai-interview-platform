@@ -38,10 +38,10 @@ def evaluate_theory(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    if data.domain not in ["dsa", "os", "ml", "web"]:
+    if data.domain not in ["dsa", "oop", "ml", "react"]:
         raise HTTPException(
             status_code=400,
-            detail="Domain must be one of: dsa, os, ml, web"
+            detail="Domain must be one of: dsa, oop, ml, react"
         )
 
     if len(data.answer.strip()) < 10:

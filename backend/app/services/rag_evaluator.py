@@ -6,9 +6,9 @@ from app.services.retriever import retrieve_context
 
 DOMAIN_MAP = {
     "dsa": "dsa",
-    "os": "os",
+    "oop": "oop",
     "ml": "ml",
-    "web": "web",
+    "react": "react",
 }
 
 

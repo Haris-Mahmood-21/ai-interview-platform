@@ -1,0 +1,62 @@
+FOUR PILLARS OF OOP
+
+Encapsulation: bundling data (attributes) and methods that operate on the data into a single unit (class), and restricting direct access to some components. Achieved through access modifiers: public (accessible everywhere), protected (accessible within class and subclasses), private (accessible only within the class). Getters and setters provide controlled access to private fields. Benefits: hides implementation details, reduces coupling, makes code easier to maintain.
+
+Abstraction: hiding complex implementation details and exposing only the necessary interface to the user. Achieved through abstract classes and interfaces. An abstract class cannot be instantiated and may contain abstract methods (no implementation) that subclasses must implement. Interfaces define a contract — a set of methods a class must implement. Difference: a class can implement multiple interfaces but typically inherits from one abstract class.
+
+Inheritance: a mechanism where a child class acquires properties and behaviors of a parent class. Promotes code reuse. Types: single (one parent), multilevel (A→B→C), hierarchical (one parent, many children), multiple (multiple parents — supported in Python, not Java). Method overriding: child class provides a different implementation of a method defined in the parent. super() keyword calls the parent class method.
+
+Polymorphism: the ability of an object to take many forms. Two types:
+Compile-time (static) polymorphism: method overloading — same method name, different parameters. Resolved at compile time.
+Runtime (dynamic) polymorphism: method overriding — child class overrides parent method. Resolved at runtime through dynamic dispatch. Example: a Shape reference can point to a Circle or Rectangle, and calling .area() invokes the correct implementation.
+
+CLASSES AND OBJECTS
+A class is a blueprint/template defining attributes and methods. An object is an instance of a class with its own state. Constructor: special method called when an object is created, used to initialize attributes (__init__ in Python, constructor in Java/C++).
+
+Instance variables: belong to a specific object. Class/static variables: shared across all instances of the class. Instance methods: operate on instance data (take self/this). Static methods: don't access instance or class data, utility functions. Class methods: operate on class-level data (take cls in Python).
+
+SOLID PRINCIPLES
+S — Single Responsibility: a class should have only one reason to change. Each class handles one concern.
+O — Open/Closed: open for extension, closed for modification. Add new behavior by extending, not modifying existing code.
+L — Liskov Substitution: objects of a subclass should be replaceable for objects of the superclass without breaking the program.
+I — Interface Segregation: clients should not be forced to depend on interfaces they don't use. Prefer many small interfaces over one large one.
+D — Dependency Inversion: depend on abstractions, not concrete implementations. High-level modules should not depend on low-level modules.
+
+DESIGN PATTERNS
+Creational patterns (object creation):
+Singleton: ensures only one instance of a class exists. Used for database connections, loggers. Implemented by making the constructor private and providing a static getInstance() method.
+Factory Method: defines an interface for creating objects, but lets subclasses decide which class to instantiate.
+Builder: constructs complex objects step by step. Separates construction from representation.
+
+Structural patterns (object composition):
+Decorator: dynamically adds behavior to an object without modifying its class. Wraps the original object.
+Adapter: converts the interface of a class into another interface clients expect. Bridges incompatible interfaces.
+Facade: provides a simplified interface to a complex subsystem.
+
+Behavioral patterns (communication between objects):
+Observer: defines a one-to-many dependency. When one object changes state, all dependents are notified automatically. Used in event systems.
+Strategy: defines a family of algorithms, encapsulates each one, makes them interchangeable. Select algorithm at runtime.
+Iterator: provides a way to sequentially access elements of a collection without exposing its representation.
+
+INTERFACES VS ABSTRACT CLASSES
+Abstract class: can have both abstract and concrete methods, can have constructors, can have state (instance variables), supports single inheritance in most languages.
+Interface: all methods are abstract by default (in Java), no state (only constants), a class can implement multiple interfaces, defines a contract.
+Use abstract class when: sharing code among related classes, need constructors or state.
+Use interface when: unrelated classes should share behavior, want to support multiple inheritance of type.
+
+COMPOSITION VS INHERITANCE
+Inheritance (is-a): Car is-a Vehicle. Creates tight coupling. Changes to parent affect all children.
+Composition (has-a): Car has-a Engine. More flexible. Preferred in modern OOP.
+"Favor composition over inheritance" — if you can express the relationship as has-a, prefer composition. Inheritance is appropriate for genuine is-a relationships.
+
+ACCESS MODIFIERS
+Public: accessible from anywhere.
+Private: accessible only within the class. Strongest encapsulation.
+Protected: accessible within the class and its subclasses.
+Package-private (Java default): accessible within the same package.
+
+OBJECT RELATIONSHIPS
+Association: general relationship between classes. A Teacher teaches Students.
+Aggregation: weak has-a. A Department has Professors. Professors exist independently.
+Composition: strong has-a. A House has Rooms. Rooms cannot exist without the House.
+Dependency: one class uses another temporarily. A method takes an object as parameter.

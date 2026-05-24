@@ -9,9 +9,9 @@ import { useSearchParams } from "next/navigation";
 
 const CATEGORIES = [
   { id: "dsa", label: "Data Structures & Algorithms", icon: "🧠", desc: "Arrays, trees, graphs, sorting, DP" },
-  { id: "os", label: "Operating Systems", icon: "⚙️", desc: "Processes, memory, scheduling, deadlocks" },
+  { id: "oop", label: "Object-Oriented Programming", icon: "🧩", desc: "Classes, inheritance, SOLID, design patterns" },
   { id: "ml", label: "Machine Learning", icon: "🤖", desc: "Supervised learning, neural networks, evaluation" },
-  { id: "web", label: "Web Development", icon: "🌐", desc: "HTTP, databases, auth, React, system design" },
+  { id: "react", label: "React & Frontend", icon: "⚛️", desc: "Hooks, state management, Next.js, performance" },
 ];
 
 const MODES = [

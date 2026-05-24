@@ -103,53 +103,160 @@ QUESTIONS = [
         "test_cases": None,
     },
 
-    # ─── OS CODING ────────────────────────────────────────────────────
+# ─── OOP CODING ───────────────────────────────────────────────────
     {
-        "category": "os",
+        "category": "oop",
         "type": "coding",
         "difficulty": "easy",
-        "question_text": "Simulate a simple round-robin scheduler. Given a list of processes with their burst times and a time quantum, return the order in which processes finish and the average waiting time.\n\nExample:\nInput: processes = [('P1', 10), ('P2', 5), ('P3', 8)], quantum = 4\nOutput: average waiting time",
+        "question_text": "Create a Python class called BankAccount with attributes owner and balance. Add methods deposit(amount), withdraw(amount), and get_balance(). Withdrawal should fail if balance is insufficient.\n\nExample:\nacc = BankAccount('Ali', 1000)\nacc.deposit(500)\nacc.withdraw(200)\nprint(acc.get_balance())  # 1300",
         "test_cases": json.dumps([
-            {"input": "processes = [('P1', 4), ('P2', 3)]\nquantum = 2", "expected": "2.5"},
+            {"input": "acc = BankAccount('Ali', 1000)\nacc.deposit(500)\nprint(acc.get_balance())", "expected": "1500"},
+            {"input": "acc = BankAccount('Ali', 1000)\nacc.withdraw(400)\nprint(acc.get_balance())", "expected": "600"},
+            {"input": "acc = BankAccount('Ali', 100)\nresult = acc.withdraw(500)\nprint(result)", "expected": "false"},
         ]),
     },
     {
-        "category": "os",
+        "category": "oop",
         "type": "coding",
         "difficulty": "medium",
-        "question_text": "Implement the banker's algorithm to check if a system state is safe. Given available resources, allocation matrix, and max matrix, return True if the state is safe, False otherwise.",
+        "question_text": "Implement a Shape hierarchy in Python. Create a base class Shape with an abstract method area(). Create two subclasses: Circle(radius) and Rectangle(width, height). Each must implement area() correctly.\n\nExample:\nc = Circle(5)\nprint(round(c.area(), 2))  # 78.54",
         "test_cases": json.dumps([
-            {"input": "available = [3, 3, 2]\nallocation = [[0,1,0],[2,0,0],[3,0,2],[2,1,1],[0,0,2]]\nmax_matrix = [[7,5,3],[3,2,2],[9,0,2],[2,2,2],[4,3,3]]", "expected": "True"},
+            {"input": "import math\nc = Circle(5)\nprint(round(c.area(), 2))", "expected": "78.54"},
+            {"input": "r = Rectangle(4, 6)\nprint(r.area())", "expected": "24"},
+            {"input": "r = Rectangle(3, 3)\nprint(r.area())", "expected": "9"},
+        ]),
+    },
+    {
+        "category": "oop",
+        "type": "coding",
+        "difficulty": "medium",
+        "question_text": "Implement the Singleton design pattern in Python. Create a class DatabaseConnection that ensures only one instance is ever created. Calling DatabaseConnection() multiple times should return the same object.\n\nExample:\na = DatabaseConnection()\nb = DatabaseConnection()\nprint(a is b)  # True",
+        "test_cases": json.dumps([
+            {"input": "a = DatabaseConnection()\nb = DatabaseConnection()\nprint(a is b)", "expected": "true"},
         ]),
     },
 
-    # ─── OS THEORY ────────────────────────────────────────────────────
+    # ─── OOP THEORY ───────────────────────────────────────────────────
     {
-        "category": "os",
+        "category": "oop",
         "type": "theory",
         "difficulty": "easy",
-        "question_text": "What is the difference between a process and a thread? When would you use one over the other?",
+        "question_text": "What are the four pillars of Object-Oriented Programming? Briefly explain each one.",
         "test_cases": None,
     },
     {
-        "category": "os",
+        "category": "oop",
+        "type": "theory",
+        "difficulty": "easy",
+        "question_text": "What is the difference between a class and an object? Give a real-world example of each.",
+        "test_cases": None,
+    },
+    {
+        "category": "oop",
         "type": "theory",
         "difficulty": "medium",
-        "question_text": "Explain the four necessary conditions for a deadlock to occur. How can each condition be prevented?",
+        "question_text": "What is the difference between method overloading and method overriding? Which one is runtime polymorphism and why?",
         "test_cases": None,
     },
     {
-        "category": "os",
+        "category": "oop",
         "type": "theory",
         "difficulty": "medium",
-        "question_text": "What is virtual memory and how does paging work? Explain what happens during a page fault.",
+        "question_text": "When would you use an abstract class vs an interface? What are the key differences between them?",
         "test_cases": None,
     },
     {
-        "category": "os",
+        "category": "oop",
+        "type": "theory",
+        "difficulty": "medium",
+        "question_text": "Explain the SOLID principles. Which one do you think is most important and why?",
+        "test_cases": None,
+    },
+    {
+        "category": "oop",
         "type": "theory",
         "difficulty": "hard",
-        "question_text": "Compare and contrast LRU, FIFO, and Optimal page replacement algorithms. Which performs best and why?",
+        "question_text": "What is composition vs inheritance? Why do experienced developers say 'favor composition over inheritance'?",
+        "test_cases": None,
+    },
+    {
+        "category": "oop",
+        "type": "theory",
+        "difficulty": "hard",
+        "question_text": "Explain the Observer design pattern. Where would you use it in a real application?",
+        "test_cases": None,
+    },
+
+    # ─── REACT CODING ─────────────────────────────────────────────────
+    {
+        "category": "react",
+        "type": "coding",
+        "difficulty": "easy",
+        "question_text": "Write a Python function that simulates React's useState behavior. Create a class StateManager with methods get_state(), set_state(value), and a render callback that fires whenever state changes.\n\nExample:\nsm = StateManager(0)\nsm.set_state(5)\nprint(sm.get_state())  # 5",
+        "test_cases": json.dumps([
+            {"input": "sm = StateManager(0)\nsm.set_state(5)\nprint(sm.get_state())", "expected": "5"},
+            {"input": "sm = StateManager('hello')\nsm.set_state('world')\nprint(sm.get_state())", "expected": "world"},
+        ]),
+    },
+    {
+        "category": "react",
+        "type": "coding",
+        "difficulty": "medium",
+        "question_text": "Write a Python function that simulates a simple event emitter (similar to React's synthetic event system). Create an EventEmitter class with on(event, callback), emit(event, data), and off(event, callback) methods.\n\nExample:\nem = EventEmitter()\nem.on('click', lambda d: print(f'clicked: {d}'))\nem.emit('click', 'button1')",
+        "test_cases": json.dumps([
+            {"input": "results = []\nem = EventEmitter()\nem.on('click', lambda d: results.append(d))\nem.emit('click', 'btn')\nprint(results)", "expected": "['btn']"},
+            {"input": "results = []\nem = EventEmitter()\nfn = lambda d: results.append(d)\nem.on('click', fn)\nem.off('click', fn)\nem.emit('click', 'btn')\nprint(results)", "expected": "[]"},
+        ]),
+    },
+
+    # ─── REACT THEORY ─────────────────────────────────────────────────
+    {
+        "category": "react",
+        "type": "theory",
+        "difficulty": "easy",
+        "question_text": "What is the virtual DOM in React and why does it exist? How does React use it to update the UI efficiently?",
+        "test_cases": None,
+    },
+    {
+        "category": "react",
+        "type": "theory",
+        "difficulty": "easy",
+        "question_text": "What is the difference between props and state in React? When would you use one vs the other?",
+        "test_cases": None,
+    },
+    {
+        "category": "react",
+        "type": "theory",
+        "difficulty": "medium",
+        "question_text": "Explain useEffect in React. What does the dependency array do and what happens if you omit it?",
+        "test_cases": None,
+    },
+    {
+        "category": "react",
+        "type": "theory",
+        "difficulty": "medium",
+        "question_text": "What is the difference between useMemo and useCallback? When would you use each one?",
+        "test_cases": None,
+    },
+    {
+        "category": "react",
+        "type": "theory",
+        "difficulty": "medium",
+        "question_text": "What is prop drilling and how do you solve it? Explain Context API and when you would use an external state manager instead.",
+        "test_cases": None,
+    },
+    {
+        "category": "react",
+        "type": "theory",
+        "difficulty": "hard",
+        "question_text": "What is the difference between server-side rendering and client-side rendering in Next.js? When would you choose SSR over SSG?",
+        "test_cases": None,
+    },
+    {
+        "category": "react",
+        "type": "theory",
+        "difficulty": "hard",
+        "question_text": "Explain React's reconciliation algorithm. How does React decide what to re-render and what role does the key prop play?",
         "test_cases": None,
     },
 
@@ -201,67 +308,7 @@ QUESTIONS = [
         "difficulty": "hard",
         "question_text": "Explain how gradient descent works. What are the differences between batch, stochastic, and mini-batch gradient descent?",
         "test_cases": None,
-    },
-
-    # ─── WEB CODING ───────────────────────────────────────────────────
-    {
-        "category": "web",
-        "type": "coding",
-        "difficulty": "easy",
-        "question_text": "Write a function that takes a URL query string and returns a dictionary of key-value pairs.\n\nExample:\nInput: 'name=John&age=30&city=NYC'\nOutput: {'name': 'John', 'age': '30', 'city': 'NYC'}",
-        "test_cases": json.dumps([
-            {"input": "'name=John&age=30'", "expected": "{'name': 'John', 'age': '30'}"},
-            {"input": "'key=value'", "expected": "{'key': 'value'}"},
-            {"input": "''", "expected": "{}"},
-        ]),
-    },
-    {
-        "category": "web",
-        "type": "coding",
-        "difficulty": "medium",
-        "question_text": "Implement a simple rate limiter. Given a list of request timestamps (in seconds) and a limit of N requests per 60-second window, return True if the latest request should be allowed, False if it should be blocked.\n\nExample:\nInput: timestamps = [1, 2, 3, 101], limit = 3\nOutput: True (only 1 request in the last 60 seconds)",
-        "test_cases": json.dumps([
-            {"input": "timestamps = [1, 2, 3, 4]\nlimit = 3", "expected": "False"},
-            {"input": "timestamps = [1, 2, 3, 101]\nlimit = 3", "expected": "True"},
-        ]),
-    },
-
-    # ─── WEB THEORY ───────────────────────────────────────────────────
-    {
-        "category": "web",
-        "type": "theory",
-        "difficulty": "easy",
-        "question_text": "What is the difference between authentication and authorization? Give a real-world example of each.",
-        "test_cases": None,
-    },
-    {
-        "category": "web",
-        "type": "theory",
-        "difficulty": "medium",
-        "question_text": "Explain how JWT authentication works. What are its advantages and potential security risks?",
-        "test_cases": None,
-    },
-    {
-        "category": "web",
-        "type": "theory",
-        "difficulty": "medium",
-        "question_text": "What is the difference between SQL and NoSQL databases? When would you choose one over the other?",
-        "test_cases": None,
-    },
-    {
-        "category": "web",
-        "type": "theory",
-        "difficulty": "hard",
-        "question_text": "Explain the concept of database indexing. How do indexes improve query performance, and what are their downsides?",
-        "test_cases": None,
-    },
-    {
-        "category": "web",
-        "type": "theory",
-        "difficulty": "hard",
-        "question_text": "What is the N+1 query problem? How would you detect and fix it in a web application?",
-        "test_cases": None,
-    },
+    }
 ]
 
 

@@ -1,0 +1,74 @@
+REACT FUNDAMENTALS
+
+React is a JavaScript library for building user interfaces through reusable components. Key concepts: component-based architecture, unidirectional data flow, virtual DOM, declarative UI.
+
+Virtual DOM: React maintains a lightweight in-memory copy of the real DOM. When state changes, React creates a new virtual DOM, diffs it against the previous one (reconciliation), and applies only the minimal necessary updates to the real DOM. This makes updates efficient.
+
+JSX: JavaScript XML — syntax extension allowing HTML-like code in JavaScript. JSX is transpiled to React.createElement() calls by Babel. JSX expressions must have a single root element (or use fragments <>...</>).
+
+COMPONENTS
+Functional components: plain JavaScript functions that return JSX. Preferred in modern React. Support hooks.
+Class components: ES6 classes extending React.Component. Have lifecycle methods. Being phased out in favor of hooks.
+
+Props: read-only data passed from parent to child. Cannot be modified by the child (unidirectional flow). Use prop destructuring for cleaner code.
+State: mutable data managed within a component. When state changes, the component re-renders.
+Controlled components: form elements whose value is controlled by React state. onChange handler updates state. Value always reflects state.
+Uncontrolled components: form elements managed by the DOM itself. Access via useRef.
+
+HOOKS
+useState: declare state in functional components. Returns [value, setter]. Calling setter triggers re-render. State updates are asynchronous and batched.
+
+useEffect: handle side effects (data fetching, subscriptions, DOM manipulation). Runs after render. Dependency array controls when it runs: empty array = run once on mount, specific deps = run when deps change, no array = run every render. Return a cleanup function to prevent memory leaks.
+
+useContext: consume React context without prop drilling. Avoids passing props through intermediate components.
+
+useRef: access DOM elements directly or store mutable values that don't trigger re-renders. Does not cause re-render when changed. Common use: focus management, storing previous values, referencing DOM nodes.
+
+useMemo: memoize expensive computed values. Recalculates only when dependencies change. Prevents unnecessary recalculation on every render.
+
+useCallback: memoize functions so they don't get recreated on every render. Important when passing callbacks to child components wrapped in React.memo.
+
+useReducer: alternative to useState for complex state logic. Takes a reducer function (state, action) => newState and dispatch function. Similar to Redux pattern. Better than useState when next state depends on previous state or multiple sub-values.
+
+Custom hooks: functions starting with "use" that encapsulate reusable stateful logic. Extract common patterns like data fetching, form handling, event listeners into reusable hooks.
+
+COMPONENT LIFECYCLE (via useEffect equivalents)
+Mount: useEffect(() => { ... }, []) — runs once after first render
+Update: useEffect(() => { ... }, [dep]) — runs when dep changes
+Unmount: cleanup function returned from useEffect
+
+REACT PERFORMANCE
+React.memo: higher-order component that prevents re-render if props haven't changed. Shallow comparison of props.
+Key prop: helps React identify list items in reconciliation. Must be unique and stable. Using index as key causes bugs with dynamic lists.
+Code splitting: React.lazy() and Suspense for loading components on demand.
+Avoiding unnecessary re-renders: lift state only as high as needed, use memoization, split components.
+
+STATE MANAGEMENT
+Local state (useState): for UI state within a single component.
+Lifted state: shared state moved to closest common ancestor.
+Context API: global state for low-frequency updates (theme, auth, language). Not optimized for high-frequency updates.
+External state management: Redux (predictable, large apps), Zustand (lightweight, simple), Jotai/Recoil (atomic state).
+
+Redux pattern: single store, actions describe what happened, reducers specify how state changes, dispatch sends actions, selectors read state. Redux Toolkit simplifies Redux with createSlice, createAsyncThunk.
+
+REACT ROUTER
+Client-side routing: navigate between pages without full page reload. BrowserRouter uses HTML5 history API. Route components render based on current URL. useNavigate for programmatic navigation. useParams to access URL parameters. useSearchParams for query strings.
+
+DATA FETCHING IN REACT
+useEffect + fetch/axios: basic pattern. Handle loading and error states manually.
+React Query (TanStack Query): powerful data fetching library. Handles caching, background refetching, loading/error states, pagination. useQuery for fetching, useMutation for write operations.
+SWR: stale-while-revalidate strategy. Shows cached data while fetching fresh data.
+
+NEXT.JS
+Next.js is a React framework adding: file-based routing, server-side rendering (SSR), static site generation (SSG), API routes, image optimization.
+SSR (getServerSideProps): renders page on every request on the server. Good for dynamic data, SEO.
+SSG (getStaticProps): renders at build time. Fast, CDN-cacheable. Good for blogs, docs.
+App Router (Next.js 13+): server components by default, client components opt-in with "use client". Layouts, nested routing, loading/error boundaries built-in.
+Server components: render on server, zero JavaScript sent to client, can access backend resources directly.
+Client components: run in browser, can use hooks and event listeners, needed for interactivity.
+
+COMMON REACT PATTERNS
+Compound components: components that work together sharing implicit state (e.g. Select + Option).
+Render props: pass a function as a prop to share logic between components.
+Higher-order components (HOC): function that takes a component and returns a new enhanced component.
+Container/Presentational pattern: separate data fetching (container) from rendering (presentational).

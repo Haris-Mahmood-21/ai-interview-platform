@@ -14,11 +14,10 @@ THEORY_COUNT = 3
 
 DOMAIN_LABELS = {
     "dsa": "Data Structures and Algorithms",
-    "os": "Operating Systems",
+    "oop": "Object-Oriented Programming",
     "ml": "Machine Learning",
-    "web": "Web Development",
+    "react": "React and Frontend Development",
 }
-
 
 def get_user_difficulty(db: Session, user_id: int, category: str) -> str:
     """
