@@ -1,7 +1,9 @@
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
+from app.core.exceptions import general_exception_handler, validation_exception_handler
 from app.routers import auth, code, dashboard, questions, resume, theory
 
 app = FastAPI(
@@ -17,6 +19,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
+app.add_exception_handler(Exception, general_exception_handler)
 
 app.include_router(auth.router)
 app.include_router(resume.router)

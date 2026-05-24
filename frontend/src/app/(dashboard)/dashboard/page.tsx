@@ -50,8 +50,18 @@ export default function DashboardPage() {
     return (
       <div className="min-h-screen bg-gray-950">
         <Navbar />
-        <div className="flex items-center justify-center h-96">
-          <div className="text-gray-600 text-sm">Loading dashboard...</div>
+        <div className="max-w-5xl mx-auto px-4 py-10 space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="h-8 w-48 bg-gray-800 rounded-lg animate-pulse" />
+            <div className="h-10 w-36 bg-gray-800 rounded-xl animate-pulse" />
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-28 bg-gray-900 border border-gray-800 rounded-xl animate-pulse" />
+            ))}
+          </div>
+          <div className="h-64 bg-gray-900 border border-gray-800 rounded-2xl animate-pulse" />
+          <div className="h-48 bg-gray-900 border border-gray-800 rounded-2xl animate-pulse" />
         </div>
       </div>
     );

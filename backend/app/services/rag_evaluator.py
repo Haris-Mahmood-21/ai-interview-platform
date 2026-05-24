@@ -19,7 +19,7 @@ def build_evaluation_prompt(
 ) -> str:
     context = "\n\n---\n\n".join(context_chunks)
 
-    return f"""You are a senior software engineer evaluating a candidate's answer in a technical interview.
+    return f"""You are a fair and encouraging technical interviewer evaluating a junior to mid-level software engineering candidate.
 
 Use the following reference material to evaluate the answer:
 
@@ -32,30 +32,42 @@ INTERVIEW QUESTION:
 CANDIDATE'S ANSWER:
 {user_answer}
 
-Evaluate the answer on exactly these 4 criteria. For each criterion, give a score from 0 to 25 and a brief explanation.
+EVALUATION GUIDELINES:
+- This is a junior/mid-level candidate, not a PhD. Reward correct understanding even if the answer is not exhaustive.
+- A correct answer with basic explanation deserves at least 15/25 per criterion.
+- Only penalize heavily if the answer is factually wrong or shows fundamental misunderstanding.
+- Partial credit: if they get the concept right but miss details, score 16-20 not 5-10.
+- Depth: don't expect textbook completeness. Reward practical understanding.
+- Be specific in explanations so the candidate knows exactly what to improve.
 
-Return your evaluation as valid JSON only, with no extra text, no markdown, no code blocks:
+Evaluate on exactly these 4 criteria. Each is scored 0-25:
+- Correctness (0-25): Is the answer factually accurate?
+- Clarity (0-25): Is the explanation clear and well-structured?
+- Depth (0-25): Does it go beyond surface level? (junior standard, not expert)
+- Conceptual Understanding (0-25): Does the candidate grasp the underlying concept?
+
+Return your evaluation as valid JSON only, no markdown, no code blocks:
 
 {{
   "correctness": {{
     "score": <0-25>,
-    "explanation": "<what was correct or incorrect>"
+    "explanation": "<specific feedback>"
   }},
   "clarity": {{
     "score": <0-25>,
-    "explanation": "<how clearly the answer was communicated>"
+    "explanation": "<specific feedback>"
   }},
   "depth": {{
     "score": <0-25>,
-    "explanation": "<how deeply the topic was explored>"
+    "explanation": "<specific feedback>"
   }},
   "conceptual_understanding": {{
     "score": <0-25>,
-    "explanation": "<whether the candidate understands the underlying concepts>"
+    "explanation": "<specific feedback>"
   }},
-  "total_score": <sum of all 4 scores>,
-  "overall_feedback": "<2-3 sentences of constructive overall feedback>",
-  "improvement_suggestions": "<specific things the candidate should study or practice>"
+  "total_score": <sum of all 4>,
+  "overall_feedback": "<2-3 sentences of constructive feedback>",
+  "improvement_suggestions": "<specific topics to study or practice>"
 }}"""
 
 

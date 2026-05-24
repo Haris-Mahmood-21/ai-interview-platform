@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import api from "@/lib/api";
 import { useInterviewStore } from "@/store/interviewStore";
+import { useSearchParams } from "next/navigation";
 
 const CATEGORIES = [
-  { id: "dsa", label: "Data Structures & Algorithms", icon: "🧮", desc: "Arrays, trees, graphs, sorting, DP" },
+  { id: "dsa", label: "Data Structures & Algorithms", icon: "🧠", desc: "Arrays, trees, graphs, sorting, DP" },
   { id: "os", label: "Operating Systems", icon: "⚙️", desc: "Processes, memory, scheduling, deadlocks" },
   { id: "ml", label: "Machine Learning", icon: "🤖", desc: "Supervised learning, neural networks, evaluation" },
   { id: "web", label: "Web Development", icon: "🌐", desc: "HTTP, databases, auth, React, system design" },
@@ -28,6 +29,16 @@ export default function ConfigPage() {
   const [uploading, setUploading] = useState(false);
   const [uploadDone, setUploadDone] = useState(false);
   const [uploadedSkills, setUploadedSkills] = useState<string[]>([]);
+  
+  const searchParams = useSearchParams();
+
+useEffect(() => {
+  const cat = searchParams.get("category");
+  if (cat && ["dsa", "os", "ml", "web"].includes(cat)) {
+    setCategory(cat);
+  }
+}, [searchParams]);
+
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

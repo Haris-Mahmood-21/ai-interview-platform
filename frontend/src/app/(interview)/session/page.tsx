@@ -8,6 +8,7 @@ import FeedbackDisplay from "@/components/interview/FeedbackDisplay";
 import { useInterviewStore } from "@/store/interviewStore";
 import api from "@/lib/api";
 import { TheoryEvaluationResponse, CodeSubmissionResponse } from "@/types/api.types";
+import Link from "next/link";
 
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
@@ -60,17 +61,29 @@ export default function SessionPage() {
     }
   }, [isComplete, router]);
 
+  if (!paperId && questions.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-400 text-sm mb-4">No active interview session.</p>
+          <Link href="/config" className="text-indigo-400 hover:text-indigo-300 text-sm">
+            Start a new interview →
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   if (!currentQuestion) return null;
 
   const isAnswered = currentResult?.completed;
   const isLastQuestion = currentIndex === questions.length - 1;
 
   const handleTheorySubmit = async () => {
-    if (!theoryAnswer.trim()) {
-      setError("Please write an answer before submitting.");
+    if (!theoryAnswer.trim() || theoryAnswer.trim().length < 10) {
+      setError("Please write at least a sentence before submitting.");
       return;
     }
-
     setError("");
     setLoading(true);
 

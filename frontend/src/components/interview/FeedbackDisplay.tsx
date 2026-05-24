@@ -41,7 +41,18 @@ export default function FeedbackDisplay({ evaluation, followups, onAnswerFollowu
     <div className="space-y-4">
       {/* Total score */}
       <div className="flex items-center justify-between p-4 bg-gray-800 rounded-xl">
-        <span className="text-sm font-medium text-gray-300">Total Score</span>
+        <div>
+          <span className="text-sm font-medium text-gray-300">Total Score</span>
+          <p className="text-xs text-gray-500 mt-0.5">
+            {total >= 80
+              ? "Excellent — strong understanding"
+              : total >= 65
+              ? "Good — solid grasp of the concept"
+              : total >= 50
+              ? "Fair — correct direction, needs more depth"
+              : "Needs work — review the fundamentals"}
+          </p>
+        </div>
         <span className={`text-2xl font-bold ${totalColor}`}>{total}/100</span>
       </div>
 

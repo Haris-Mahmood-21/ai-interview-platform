@@ -4,12 +4,12 @@ import re
 from app.services.gemini_client import call_gemini
 
 # Score thresholds
-NO_FOLLOWUP_THRESHOLD = 85    # excellent answer — no follow-up needed
-ONE_FOLLOWUP_THRESHOLD = 60   # decent answer — one targeted follow-up
+NO_FOLLOWUP_THRESHOLD = 80    # excellent answer — no follow-up needed
+ONE_FOLLOWUP_THRESHOLD = 55   # decent answer — one targeted follow-up
 # below 60 → two follow-ups
 
 # Per-criterion threshold — below this score, the criterion is "weak"
-WEAK_CRITERION_THRESHOLD = 15
+WEAK_CRITERION_THRESHOLD = 13
 
 
 def should_ask_followup(evaluation: dict) -> tuple[bool, int]:
