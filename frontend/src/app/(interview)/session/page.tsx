@@ -9,7 +9,6 @@ import { useInterviewStore } from "@/store/interviewStore";
 import api from "@/lib/api";
 import { TheoryEvaluationResponse, CodeSubmissionResponse } from "@/types/api.types";
 
-// Load Monaco only on client side
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
 const DIFFICULTY_COLORS: Record<string, string> = {
@@ -22,9 +21,18 @@ const LANGUAGE_OPTIONS = ["python", "javascript", "java", "cpp"];
 
 export default function SessionPage() {
   const router = useRouter();
+
   const {
-    questions, currentIndex, results, category,
-    setResult, nextQuestion, completeInterview, isComplete, paperId,
+    questions,
+    currentIndex,
+    results,
+    category,
+    mode,
+    setResult,
+    nextQuestion,
+    completeInterview,
+    isComplete,
+    paperId,
   } = useInterviewStore();
 
   const [theoryAnswer, setTheoryAnswer] = useState("");
@@ -33,7 +41,6 @@ export default function SessionPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Follow-up state
   const [activeFollowup, setActiveFollowup] = useState<string | null>(null);
   const [followupAnswer, setFollowupAnswer] = useState("");
   const [followupLoading, setFollowupLoading] = useState(false);
@@ -41,14 +48,12 @@ export default function SessionPage() {
   const currentQuestion = questions[currentIndex];
   const currentResult = results[currentIndex];
 
-  // Redirect if no paper loaded
   useEffect(() => {
     if (!paperId && questions.length === 0) {
       router.push("/config");
     }
-  }, [paperId, questions, router]);
+  }, [paperId, questions.length, router]);
 
-  // Redirect to results when complete
   useEffect(() => {
     if (isComplete) {
       router.push("/dashboard");
@@ -60,11 +65,15 @@ export default function SessionPage() {
   const isAnswered = currentResult?.completed;
   const isLastQuestion = currentIndex === questions.length - 1;
 
-  // ─── Submit theory answer ──────────────────────────────────────────
   const handleTheorySubmit = async () => {
-    if (!theoryAnswer.trim()) { setError("Please write an answer before submitting."); return; }
+    if (!theoryAnswer.trim()) {
+      setError("Please write an answer before submitting.");
+      return;
+    }
+
     setError("");
     setLoading(true);
+
     try {
       const { data }: { data: TheoryEvaluationResponse } = await api.post(
         "/theory/evaluate",
@@ -74,6 +83,7 @@ export default function SessionPage() {
           domain: category,
         }
       );
+
       setResult(currentIndex, {
         answer: theoryAnswer,
         evaluation: data,
@@ -87,22 +97,27 @@ export default function SessionPage() {
     }
   };
 
-  // ─── Submit code ───────────────────────────────────────────────────
   const handleCodeSubmit = async () => {
-    if (!codeAnswer.trim()) { setError("Please write some code before submitting."); return; }
+    if (!codeAnswer.trim()) {
+      setError("Please write some code before submitting.");
+      return;
+    }
     setError("");
     setLoading(true);
     try {
+      // Normalize line endings before sending
+      const normalizedCode = codeAnswer.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+
       const { data }: { data: CodeSubmissionResponse } = await api.post(
         "/code/submit",
         {
           question_id: currentQuestion.id,
-          source_code: codeAnswer,
+          source_code: normalizedCode,
           language,
         }
       );
       setResult(currentIndex, {
-        answer: codeAnswer,
+        answer: normalizedCode,
         codeResult: data,
         score: data.score,
         completed: true,
@@ -113,11 +128,11 @@ export default function SessionPage() {
       setLoading(false);
     }
   };
-
-  // ─── Submit follow-up answer ───────────────────────────────────────
   const handleFollowupSubmit = async () => {
     if (!followupAnswer.trim() || !activeFollowup) return;
+
     setFollowupLoading(true);
+
     try {
       const { data }: { data: TheoryEvaluationResponse } = await api.post(
         "/theory/evaluate",
@@ -127,13 +142,20 @@ export default function SessionPage() {
           domain: category,
         }
       );
+
       const prev = currentResult.followupAnswers || [];
+
       setResult(currentIndex, {
         followupAnswers: [
           ...prev,
-          { question: activeFollowup, answer: followupAnswer, evaluation: data },
+          {
+            question: activeFollowup,
+            answer: followupAnswer,
+            evaluation: data,
+          },
         ],
       });
+
       setActiveFollowup(null);
       setFollowupAnswer("");
     } catch {
@@ -143,9 +165,24 @@ export default function SessionPage() {
     }
   };
 
-  // ─── Next / Finish ─────────────────────────────────────────────────
-  const handleNext = () => {
+  const handleNext = async () => {
     if (isLastQuestion) {
+      try {
+        const codingScore = useInterviewStore.getState().getAverageCodingScore();
+        const theoryScore = useInterviewStore.getState().getAverageTheoryScore();
+        const elapsed = useInterviewStore.getState().getElapsedSeconds();
+
+        await api.post("/questions/attempts/save", {
+          category,
+          mode,
+          coding_score: codingScore,
+          theory_score: theoryScore,
+          time_taken: elapsed,
+        });
+      } catch (e) {
+        console.error("Failed to save attempt:", e);
+      }
+
       completeInterview();
     } else {
       setTheoryAnswer("");
@@ -161,29 +198,29 @@ export default function SessionPage() {
     <div className="min-h-screen bg-gray-950">
       <Navbar />
 
-      {/* Progress bar */}
       <div className="bg-gray-900 border-b border-gray-800 px-6 py-3">
         <div className="max-w-6xl mx-auto flex items-center gap-4">
           <span className="text-xs text-gray-500">
             Question {currentIndex + 1} of {questions.length}
           </span>
+
           <div className="flex-1 bg-gray-800 rounded-full h-1">
             <div
               className="bg-indigo-600 h-1 rounded-full transition-all"
-              style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
+              style={{
+                width: `${((currentIndex + 1) / questions.length) * 100}%`,
+              }}
             />
           </div>
+
           <span className="text-xs text-gray-500 capitalize">{category}</span>
         </div>
       </div>
 
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="grid grid-cols-2 gap-6 h-full">
-
-          {/* LEFT — Question panel */}
           <div className="space-y-4">
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-              {/* Header */}
               <div className="flex items-center gap-2 mb-4">
                 <span
                   className={`text-xs font-medium px-2 py-0.5 rounded-full border ${
@@ -192,18 +229,17 @@ export default function SessionPage() {
                 >
                   {currentQuestion.difficulty}
                 </span>
+
                 <span className="text-xs text-gray-500 bg-gray-800 px-2 py-0.5 rounded-full border border-gray-700">
                   {currentQuestion.type === "coding" ? "Coding" : "Theory"}
                 </span>
               </div>
 
-              {/* Question text */}
               <p className="text-white text-sm leading-relaxed whitespace-pre-line">
                 {currentQuestion.question_text}
               </p>
             </div>
 
-            {/* Code test results */}
             {isAnswered && currentResult.codeResult && (
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
                 <div className="flex items-center justify-between mb-4">
@@ -218,6 +254,7 @@ export default function SessionPage() {
                     {currentResult.codeResult.score}%
                   </span>
                 </div>
+
                 <div className="space-y-2">
                   {currentResult.codeResult.results.map((r, i) => (
                     <div
@@ -229,14 +266,18 @@ export default function SessionPage() {
                       }`}
                     >
                       <span>{r.passed ? "✓" : "✗"}</span>
+
                       <div className="flex-1">
                         <span className="text-gray-400">
                           Test {r.test_case}: {r.passed ? "Passed" : "Failed"}
                         </span>
+
                         {!r.passed && (
                           <div className="mt-1 space-y-0.5">
                             <p className="text-gray-500">Expected: {r.expected}</p>
-                            <p className="text-gray-500">Got: {r.actual || r.error}</p>
+                            <p className="text-gray-500">
+                              Got: {r.actual || r.error}
+                            </p>
                           </div>
                         )}
                       </div>
@@ -246,7 +287,6 @@ export default function SessionPage() {
               </div>
             )}
 
-            {/* Theory feedback */}
             {isAnswered && currentResult.evaluation && (
               <FeedbackDisplay
                 evaluation={currentResult.evaluation.evaluation}
@@ -262,7 +302,6 @@ export default function SessionPage() {
               />
             )}
 
-            {/* Followup answers already submitted */}
             {(currentResult.followupAnswers?.length ?? 0) > 0 && (
               <div className="space-y-3">
                 {currentResult.followupAnswers!.map((fa, i) => (
@@ -270,9 +309,12 @@ export default function SessionPage() {
                     key={i}
                     className="bg-gray-900 border border-gray-800 rounded-xl p-4"
                   >
-                    <p className="text-xs text-indigo-400 mb-2">Follow-up {i + 1}</p>
+                    <p className="text-xs text-indigo-400 mb-2">
+                      Follow-up {i + 1}
+                    </p>
                     <p className="text-sm text-gray-300 mb-2">{fa.question}</p>
                     <p className="text-xs text-gray-500 italic">{fa.answer}</p>
+
                     {fa.evaluation && (
                       <p className="text-xs text-gray-500 mt-2">
                         Score: {fa.evaluation.total_score}/100
@@ -284,16 +326,15 @@ export default function SessionPage() {
             )}
           </div>
 
-          {/* RIGHT — Answer panel */}
           <div className="space-y-4">
-
-            {/* Active follow-up */}
             {activeFollowup && (
               <div className="bg-indigo-950 border border-indigo-800 rounded-xl p-5">
                 <p className="text-xs text-indigo-400 mb-2 uppercase tracking-wide">
                   Follow-up
                 </p>
+
                 <p className="text-sm text-white mb-4">{activeFollowup}</p>
+
                 <textarea
                   value={followupAnswer}
                   onChange={(e) => setFollowupAnswer(e.target.value)}
@@ -301,6 +342,7 @@ export default function SessionPage() {
                   className="w-full bg-gray-900 border border-indigo-700 text-white rounded-lg px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-600"
                   rows={4}
                 />
+
                 <div className="flex gap-2 mt-3">
                   <button
                     onClick={handleFollowupSubmit}
@@ -309,6 +351,7 @@ export default function SessionPage() {
                   >
                     {followupLoading ? "Evaluating..." : "Submit Answer"}
                   </button>
+
                   <button
                     onClick={() => setActiveFollowup(null)}
                     className="px-4 bg-gray-800 hover:bg-gray-700 text-gray-400 text-sm rounded-lg transition-colors"
@@ -319,21 +362,24 @@ export default function SessionPage() {
               </div>
             )}
 
-            {/* Coding answer */}
             {currentQuestion.type === "coding" && !isAnswered && (
               <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800">
                   <span className="text-xs text-gray-400">Code Editor</span>
+
                   <select
                     value={language}
                     onChange={(e) => setLanguage(e.target.value)}
                     className="bg-gray-800 border border-gray-700 text-gray-300 text-xs rounded px-2 py-1"
                   >
                     {LANGUAGE_OPTIONS.map((l) => (
-                      <option key={l} value={l}>{l}</option>
+                      <option key={l} value={l}>
+                        {l}
+                      </option>
                     ))}
                   </select>
                 </div>
+
                 <MonacoEditor
                   height="380px"
                   language={language === "cpp" ? "cpp" : language}
@@ -350,12 +396,12 @@ export default function SessionPage() {
               </div>
             )}
 
-            {/* Theory answer */}
             {currentQuestion.type === "theory" && !isAnswered && (
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
                 <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wide">
                   Your Answer
                 </label>
+
                 <textarea
                   value={theoryAnswer}
                   onChange={(e) => setTheoryAnswer(e.target.value)}
@@ -366,7 +412,6 @@ export default function SessionPage() {
               </div>
             )}
 
-            {/* Already answered — show score summary */}
             {isAnswered && !activeFollowup && (
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
                 <p className="text-sm text-gray-400 mb-1">Your answer</p>
@@ -376,14 +421,12 @@ export default function SessionPage() {
               </div>
             )}
 
-            {/* Error */}
             {error && (
               <div className="bg-red-950 border border-red-800 text-red-300 text-sm rounded-lg px-4 py-3">
                 {error}
               </div>
             )}
 
-            {/* Action buttons */}
             {!isAnswered ? (
               <button
                 onClick={

@@ -14,13 +14,30 @@ from app.services.scoring_service import calculate_coding_score
 router = APIRouter(prefix="/code", tags=["Code Assessment"])
 
 
+def normalize_output(output: str) -> str:
+    """Normalize for comparison."""
+    return output.strip().lower().replace(" ", "")
+
+
+def outputs_match(actual: str, expected: str) -> bool:
+    """Flexible output comparison."""
+    a = normalize_output(actual)
+    e = normalize_output(expected)
+    if a == e:
+        return True
+    try:
+        return float(a) == float(e)
+    except ValueError:
+        pass
+    return False
+
+
 @router.post("/submit", response_model=CodeSubmissionResponse)
 def submit_code_solution(
     data: CodeSubmissionRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    # Fetch the question
     question = db.query(Question).filter(Question.id == data.question_id).first()
     if not question:
         raise HTTPException(status_code=404, detail="Question not found")
@@ -31,7 +48,6 @@ def submit_code_solution(
             detail="This endpoint is only for coding questions"
         )
 
-    # Parse test cases
     try:
         test_cases = json.loads(question.test_cases or "[]")
     except json.JSONDecodeError:
@@ -43,23 +59,29 @@ def submit_code_solution(
             detail="This question has no test cases configured"
         )
 
-    # Run code against each test case
+    # Normalize line endings — fix \r\n from Windows/Monaco
+    clean_code = data.source_code.replace("\r\n", "\n").replace("\r", "\n")
+
     results = []
     for i, tc in enumerate(test_cases):
-        stdin = tc.get("input", "")
+        stdin_input = tc.get("input", "")
         expected = tc.get("expected", "").strip()
 
+        # Combine user code + test input as one script
+        # The test input lines are valid Python assignments (e.g. s = 'abcabcbb')
+        # We append them after the function definition so they execute directly
+        full_code = clean_code + "\n\n" + stdin_input
+
         result = submit_code(
-            source_code=data.source_code,
+            source_code=full_code,
             language=data.language,
-            stdin=stdin,
+            stdin="",
         )
 
-        # Check if output matches expected
         actual_output = result.get("stdout", "").strip()
         passed = (
-            result.get("passed", False) and
-            actual_output.lower() == expected.lower()
+            result.get("status") == "accepted"
+            and outputs_match(actual_output, expected)
         )
 
         results.append({

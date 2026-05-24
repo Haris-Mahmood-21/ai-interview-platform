@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import auth, code, questions, resume, theory
+from app.routers import auth, code, dashboard, questions, resume, theory
 
 app = FastAPI(
     title="AI Interview Platform",
@@ -23,6 +23,7 @@ app.include_router(resume.router)
 app.include_router(theory.router)
 app.include_router(questions.router)
 app.include_router(code.router)
+app.include_router(dashboard.router)
 
 
 @app.get("/health")
