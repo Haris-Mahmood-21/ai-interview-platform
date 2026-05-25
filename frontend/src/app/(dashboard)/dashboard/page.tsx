@@ -32,11 +32,15 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (mounted && !isAuthenticated) {
+    if (!mounted) return;
+
+    // Check both Zustand state AND localStorage token
+    const token = localStorage.getItem("access_token");
+    if (!isAuthenticated || !token) {
       router.push("/login");
     }
   }, [mounted, isAuthenticated, router]);
-
+  
   useEffect(() => {
     if (!mounted || !isAuthenticated) return;
     api
