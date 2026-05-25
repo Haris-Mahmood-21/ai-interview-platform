@@ -66,12 +66,6 @@ PostgreSQL    ChromaDB       Gemini API
 
 ---
 
-## Screenshots
-
-> Add screenshots or demo GIFs here
-
----
-
 ## Installation
 
 ### 1. Clone Repository
