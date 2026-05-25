@@ -310,20 +310,40 @@ export default function ConfigPage() {
           </div>
         )}
 
+        {/* Domain selection */}
         <div className="mb-8">
-          <h2 className="text-sm font-medium text-gray-300 mb-3 uppercase tracking-wide">
-            {mode === "resume"
-              ? "Domain Override (optional)"
-              : "Select Domain"}
-          </h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-medium text-gray-300 uppercase tracking-wide">
+              {mode === "resume"
+                ? "Domain Override (optional)"
+                : "Select Domain"}
+            </h2>
+
+            {mode === "resume" && category && (
+              <button
+                onClick={() => {
+                  setCategory("");
+                  setAutoDetected(false);
+                }}
+                className="text-xs text-gray-500 hover:text-red-400 border border-gray-700 hover:border-red-800 px-2.5 py-1 rounded-lg transition-colors"
+              >
+                ✕ Clear selection
+              </button>
+            )}
+          </div>
 
           <div className="grid grid-cols-2 gap-3">
             {CATEGORIES.map((cat) => (
               <button
                 key={cat.id}
                 onClick={() => {
-                  setCategory(cat.id);
-                  setAutoDetected(false);
+                  if (mode === "resume" && category === cat.id) {
+                    setCategory("");
+                    setAutoDetected(false);
+                  } else {
+                    setCategory(cat.id);
+                    setAutoDetected(false);
+                  }
                 }}
                 className={`text-left p-4 rounded-xl border transition-all ${
                   category === cat.id
@@ -332,9 +352,11 @@ export default function ConfigPage() {
                 }`}
               >
                 <div className="text-2xl mb-2">{cat.icon}</div>
+
                 <div className="text-sm font-medium text-white">
                   {cat.label}
                 </div>
+
                 <div className="text-xs text-gray-500 mt-1">{cat.desc}</div>
               </button>
             ))}
@@ -379,6 +401,7 @@ export default function ConfigPage() {
                   stroke="currentColor"
                   strokeWidth="4"
                 />
+
                 <path
                   className="opacity-75"
                   fill="currentColor"
