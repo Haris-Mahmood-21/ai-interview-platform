@@ -208,244 +208,185 @@ export default function SessionPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950">
-      <Navbar />
+  <div className="min-h-screen bg-gray-950">
+    <Navbar />
 
-      <div className="bg-gray-900 border-b border-gray-800 px-6 py-3">
-        <div className="max-w-6xl mx-auto flex items-center gap-4">
-          <span className="text-xs text-gray-500">
-            Question {currentIndex + 1} of {questions.length}
-          </span>
+    {/* Progress bar */}
+    <div className="bg-gray-900 border-b border-gray-800 px-6 py-3">
+      <div className="max-w-6xl mx-auto flex items-center gap-4">
+        <span className="text-xs text-gray-500">
+          Question {currentIndex + 1} of {questions.length}
+        </span>
+        <div className="flex-1 bg-gray-800 rounded-full h-1">
+          <div
+            className="bg-indigo-600 h-1 rounded-full transition-all"
+            style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
+          />
+        </div>
+        <span className="text-xs text-gray-500 capitalize">{category}</span>
+      </div>
+    </div>
 
-          <div className="flex-1 bg-gray-800 rounded-full h-1">
-            <div
-              className="bg-indigo-600 h-1 rounded-full transition-all"
-              style={{
-                width: `${((currentIndex + 1) / questions.length) * 100}%`,
-              }}
-            />
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="grid grid-cols-2 gap-6">
+        {/* ── LEFT COLUMN ── question + feedback */}
+        <div className="space-y-4">
+          {/* Question card */}
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <span
+                className={`text-xs font-medium px-2 py-0.5 rounded-full border ${
+                  DIFFICULTY_COLORS[currentQuestion.difficulty]
+                }`}
+              >
+                {currentQuestion.difficulty}
+              </span>
+              <span className="text-xs text-gray-500 bg-gray-800 px-2 py-0.5 rounded-full border border-gray-700">
+                {currentQuestion.type === "coding" ? "Coding" : "Theory"}
+              </span>
+            </div>
+            <p className="text-white text-sm leading-relaxed whitespace-pre-line">
+              {currentQuestion.question_text}
+            </p>
           </div>
 
-          <span className="text-xs text-gray-500 capitalize">
-            {category}
-          </span>
-
-          <span className="text-xs text-gray-600">
-            AI-generated · adapts to your level
-          </span>
-        </div>
-      </div>
-
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-2 gap-6 h-full">
-          <div className="space-y-4">
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-              <div className="flex items-center gap-2 mb-4">
+          {/* Code test results */}
+          {isAnswered && currentResult.codeResult && (
+            <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-medium text-white">Test Results</h3>
                 <span
-                  className={`text-xs font-medium px-2 py-0.5 rounded-full border ${
-                    DIFFICULTY_COLORS[currentQuestion.difficulty]
+                  className={`text-lg font-bold ${
+                    currentResult.codeResult.score >= 70
+                      ? "text-green-400"
+                      : "text-red-400"
                   }`}
                 >
-                  {currentQuestion.difficulty}
-                </span>
-
-                <span className="text-xs text-gray-500 bg-gray-800 px-2 py-0.5 rounded-full border border-gray-700">
-                  {currentQuestion.type === "coding" ? "Coding" : "Theory"}
+                  {currentResult.codeResult.score}%
                 </span>
               </div>
 
-              <p className="text-white text-sm leading-relaxed whitespace-pre-line">
-                {currentQuestion.question_text}
-              </p>
-            </div>
-
-            {isAnswered && currentResult.codeResult && (
-              <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-medium text-white">Test Results</h3>
-                  <span
-                    className={`text-lg font-bold ${
-                      currentResult.codeResult.score >= 70
-                        ? "text-green-400"
-                        : "text-red-400"
-                    }`}
-                  >
-                    {currentResult.codeResult.score}%
-                  </span>
-                </div>
-
-                <div className="space-y-2">
-                  {currentResult.codeResult.results.map((r, i) => (
-                    <div
-                      key={i}
-                      className={`flex items-start gap-3 p-3 rounded-lg text-xs ${
-                        r.passed
-                          ? "bg-green-950 border border-green-900"
-                          : "bg-red-950 border border-red-900"
-                      }`}
-                    >
-                      <span>{r.passed ? "✓" : "✗"}</span>
-
-                      <div className="flex-1">
-                        <span className="text-gray-400">
-                          Test {r.test_case}: {r.passed ? "Passed" : "Failed"}
-                        </span>
-
-                        {!r.passed && (
-                          <div className="mt-1 space-y-0.5">
-                            <p className="text-gray-500">Expected: {r.expected}</p>
-                            <p className="text-gray-500">
-                              Got: {r.actual || r.error}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {isAnswered && currentResult.evaluation && (
-              <FeedbackDisplay
-                evaluation={currentResult.evaluation.evaluation}
-                followups={
-                  activeFollowup
-                    ? []
-                    : currentResult.evaluation.followup_questions
-                }
-                onAnswerFollowup={(q) => {
-                  setActiveFollowup(q);
-                  setFollowupAnswer("");
-                }}
-              />
-            )}
-
-            {(currentResult.followupAnswers?.length ?? 0) > 0 && (
-              <div className="space-y-3">
-                {currentResult.followupAnswers!.map((fa, i) => (
+              <div className="space-y-2">
+                {currentResult.codeResult.results.map((r, i) => (
                   <div
                     key={i}
-                    className="bg-gray-900 border border-gray-800 rounded-xl p-4"
+                    className={`flex items-start gap-3 p-3 rounded-lg text-xs ${
+                      r.passed
+                        ? "bg-green-950 border border-green-900"
+                        : "bg-red-950 border border-red-900"
+                    }`}
                   >
-                    <p className="text-xs text-indigo-400 mb-2">
-                      Follow-up {i + 1}
-                    </p>
-                    <p className="text-sm text-gray-300 mb-2">{fa.question}</p>
-                    <p className="text-xs text-gray-500 italic">{fa.answer}</p>
+                    <span>{r.passed ? "✓" : "✗"}</span>
+                    <div className="flex-1">
+                      <span className="text-gray-400">
+                        Test {r.test_case}: {r.passed ? "Passed" : "Failed"}
+                      </span>
 
-                    {fa.evaluation && (
-                      <p className="text-xs text-gray-500 mt-2">
-                        Score: {fa.evaluation.total_score}/100
-                      </p>
-                    )}
+                      {!r.passed && (
+                        <div className="mt-1 space-y-0.5">
+                          <p className="text-gray-500">Expected: {r.expected}</p>
+                          <p className="text-gray-500">
+                            Got: {r.actual || r.error}
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
-          <div className="space-y-4">
-            {activeFollowup && (
-              <div className="bg-indigo-950 border border-indigo-800 rounded-xl p-5">
-                <p className="text-xs text-indigo-400 mb-2 uppercase tracking-wide">
-                  Follow-up
-                </p>
+          {/* Theory feedback */}
+          {isAnswered && currentResult.evaluation && (
+            <FeedbackDisplay
+              evaluation={currentResult.evaluation.evaluation}
+              followups={[]}
+              onAnswerFollowup={() => {}}
+            />
+          )}
+        </div>
 
-                <p className="text-sm text-white mb-4">{activeFollowup}</p>
-
-                <textarea
-                  value={followupAnswer}
-                  onChange={(e) => setFollowupAnswer(e.target.value)}
-                  placeholder="Answer the follow-up question..."
-                  className="w-full bg-gray-900 border border-indigo-700 text-white rounded-lg px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-600"
-                  rows={4}
-                />
-
-                <div className="flex gap-2 mt-3">
-                  <button
-                    onClick={handleFollowupSubmit}
-                    disabled={followupLoading || !followupAnswer.trim()}
-                    className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:bg-gray-800 disabled:text-gray-600 text-white text-sm font-medium rounded-lg py-2 transition-colors"
-                  >
-                    {followupLoading ? "Evaluating..." : "Submit Answer"}
-                  </button>
-
-                  <button
-                    onClick={() => setActiveFollowup(null)}
-                    className="px-4 bg-gray-800 hover:bg-gray-700 text-gray-400 text-sm rounded-lg transition-colors"
-                  >
-                    Skip
-                  </button>
-                </div>
+        {/* ── RIGHT COLUMN ── answer input + action buttons + follow-ups */}
+        <div className="flex flex-col gap-4">
+          {/* Coding editor */}
+          {currentQuestion.type === "coding" && !isAnswered && (
+            <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800">
+                <span className="text-xs text-gray-400">Code Editor</span>
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  className="bg-gray-800 border border-gray-700 text-gray-300 text-xs rounded px-2 py-1"
+                >
+                  {LANGUAGE_OPTIONS.map((l) => (
+                    <option key={l} value={l}>
+                      {l}
+                    </option>
+                  ))}
+                </select>
               </div>
-            )}
 
-            {currentQuestion.type === "coding" && !isAnswered && (
-              <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800">
-                  <span className="text-xs text-gray-400">Code Editor</span>
+              <MonacoEditor
+                height="380px"
+                language={language === "cpp" ? "cpp" : language}
+                value={codeAnswer}
+                onChange={(v) => setCodeAnswer(v || "")}
+                theme="vs-dark"
+                options={{
+                  fontSize: 13,
+                  minimap: { enabled: false },
+                  scrollBeyondLastLine: false,
+                  padding: { top: 12 },
+                }}
+              />
+            </div>
+          )}
 
-                  <select
-                    value={language}
-                    onChange={(e) => setLanguage(e.target.value)}
-                    className="bg-gray-800 border border-gray-700 text-gray-300 text-xs rounded px-2 py-1"
-                  >
-                    {LANGUAGE_OPTIONS.map((l) => (
-                      <option key={l} value={l}>
-                        {l}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+          {/* Theory textarea */}
+          {currentQuestion.type === "theory" && !isAnswered && (
+            <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 flex-1">
+              <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wide">
+                Your Answer
+              </label>
+              <textarea
+                value={theoryAnswer}
+                onChange={(e) => setTheoryAnswer(e.target.value)}
+                placeholder="Explain your answer in detail..."
+                className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-600"
+                rows={12}
+              />
+            </div>
+          )}
 
-                <MonacoEditor
-                  height="380px"
-                  language={language === "cpp" ? "cpp" : language}
-                  value={codeAnswer}
-                  onChange={(v) => setCodeAnswer(v || "")}
-                  theme="vs-dark"
-                  options={{
-                    fontSize: 13,
-                    minimap: { enabled: false },
-                    scrollBeyondLastLine: false,
-                    padding: { top: 12 },
-                  }}
-                />
-              </div>
-            )}
+          {/* Your answer preview */}
+          {isAnswered && (
+            <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+              <p className="text-xs text-gray-400 mb-2 uppercase tracking-wide">
+                Your answer
+              </p>
 
-            {currentQuestion.type === "theory" && !isAnswered && (
-              <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-                <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wide">
-                  Your Answer
-                </label>
-
-                <textarea
-                  value={theoryAnswer}
-                  onChange={(e) => setTheoryAnswer(e.target.value)}
-                  placeholder="Explain your answer in detail. The more thorough your explanation, the better the AI can evaluate your understanding..."
-                  className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-600"
-                  rows={12}
-                />
-              </div>
-            )}
-
-            {isAnswered && !activeFollowup && (
-              <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-                <p className="text-sm text-gray-400 mb-1">Your answer</p>
-                <p className="text-sm text-gray-300 whitespace-pre-line line-clamp-4">
+              {currentResult.type === "coding" ? (
+                <pre className="text-xs text-gray-300 bg-gray-800 rounded-lg p-3 overflow-x-auto whitespace-pre font-mono">
+                  {currentResult.answer}
+                </pre>
+              ) : (
+                <p className="text-sm text-gray-300 whitespace-pre-line line-clamp-6">
                   {currentResult.answer}
                 </p>
-              </div>
-            )}
+              )}
+            </div>
+          )}
 
-            {error && (
-              <div className="bg-red-950 border border-red-800 text-red-300 text-sm rounded-lg px-4 py-3">
-                {error}
-              </div>
-            )}
+          {/* Error */}
+          {error && (
+            <div className="bg-red-950 border border-red-800 text-red-300 text-sm rounded-lg px-4 py-3">
+              {error}
+            </div>
+          )}
 
+          {/* ── ACTION BUTTONS — Next/Submit button ── */}
+          <div className="mt-auto">
             {!isAnswered ? (
               <button
                 onClick={
@@ -458,17 +399,95 @@ export default function SessionPage() {
               >
                 {loading ? "Evaluating..." : "Submit Answer"}
               </button>
-            ) : !activeFollowup ? (
+            ) : (
               <button
                 onClick={handleNext}
                 className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-xl py-3 text-sm transition-colors"
               >
                 {isLastQuestion ? "Finish Interview →" : "Next Question →"}
               </button>
-            ) : null}
+            )}
           </div>
+
+          {/* ── FOLLOW-UP — below Next button ── */}
+          {isAnswered && currentResult.evaluation?.has_followups && (
+            <div className="space-y-3">
+              {currentResult.evaluation.followup_questions
+                .filter(
+                  (fq) =>
+                    !currentResult.followupAnswers?.find(
+                      (fa) => fa.question === fq
+                    )
+                )
+                .map((fq, i) => (
+                  <div
+                    key={i}
+                    className={`border rounded-xl overflow-hidden transition-all ${
+                      activeFollowup === fq
+                        ? "border-indigo-700 bg-indigo-950"
+                        : "border-indigo-900 bg-gray-900"
+                    }`}
+                  >
+                    <button
+                      onClick={() => {
+                        if (activeFollowup === fq) {
+                          setActiveFollowup(null);
+                          setFollowupAnswer("");
+                        } else {
+                          setActiveFollowup(fq);
+                          setFollowupAnswer("");
+                        }
+                      }}
+                      className="w-full text-left px-4 py-3 flex items-start gap-2"
+                    >
+                      <span className="text-xs font-medium text-indigo-400 shrink-0 mt-0.5">
+                        Follow-up
+                      </span>
+                      <span className="text-sm text-white">{fq}</span>
+                      <span className="ml-auto text-gray-600 text-xs shrink-0 mt-0.5">
+                        {activeFollowup === fq ? "▲" : "▼"}
+                      </span>
+                    </button>
+
+                    {activeFollowup === fq && (
+                      <div className="px-4 pb-4 border-t border-indigo-800">
+                        <textarea
+                          value={followupAnswer}
+                          onChange={(e) => setFollowupAnswer(e.target.value)}
+                          placeholder="Answer this follow-up question..."
+                          className="w-full mt-3 bg-gray-900 border border-indigo-700 text-white rounded-lg px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-600"
+                          rows={4}
+                          autoFocus
+                        />
+
+                        <div className="flex gap-2 mt-3">
+                          <button
+                            onClick={handleFollowupSubmit}
+                            disabled={followupLoading || !followupAnswer.trim()}
+                            className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:bg-gray-800 disabled:text-gray-600 text-white text-sm font-medium rounded-lg py-2 transition-colors"
+                          >
+                            {followupLoading ? "Evaluating..." : "Submit Answer"}
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              setActiveFollowup(null);
+                              setFollowupAnswer("");
+                            }}
+                            className="px-4 bg-gray-800 hover:bg-gray-700 text-gray-400 text-sm rounded-lg transition-colors"
+                          >
+                            Skip
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
-  );
-}
+  </div>
+);
+} 
