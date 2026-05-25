@@ -7,41 +7,92 @@ import api from "@/lib/api";
 import { useInterviewStore } from "@/store/interviewStore";
 
 const CATEGORIES = [
-  { id: "dsa", label: "Data Structures & Algorithms", icon: "🧮", desc: "Arrays, trees, graphs, sorting, DP" },
-  { id: "oop", label: "Object-Oriented Programming", icon: "🏗️", desc: "Classes, inheritance, SOLID, design patterns" },
-  { id: "ml", label: "Machine Learning", icon: "🤖", desc: "Supervised learning, neural networks, evaluation" },
-  { id: "react", label: "React & Frontend", icon: "⚛️", desc: "Hooks, state management, Next.js, performance" },
+  {
+    id: "dsa",
+    label: "Data Structures & Algorithms",
+    icon: "🧠",
+    desc: "Arrays, trees, graphs, sorting, DP",
+  },
+  {
+    id: "oop",
+    label: "Object-Oriented Programming",
+    icon: "🧩",
+    desc: "Classes, inheritance, SOLID, design patterns",
+  },
+  {
+    id: "ml",
+    label: "Machine Learning",
+    icon: "🤖",
+    desc: "Supervised learning, neural networks, evaluation",
+  },
+  {
+    id: "react",
+    label: "React & Frontend",
+    icon: "⚛️",
+    desc: "Hooks, state management, Next.js, performance",
+  },
 ];
 
 const MODES = [
-  { id: "general", label: "General Mode", desc: "Questions from our curated question bank", icon: "📚" },
-  { id: "resume", label: "Resume Mode", desc: "Personalized questions based on your CV", icon: "📄" },
+  {
+    id: "general",
+    label: "General Mode",
+    desc: "Questions from our curated question bank",
+    icon: "📚",
+  },
+  {
+    id: "resume",
+    label: "Resume Mode",
+    desc: "Personalized questions based on your CV",
+    icon: "📄",
+  },
 ];
 
-// Map common skills to domains for auto-detection
 const SKILL_DOMAIN_MAP: Record<string, string> = {
-  // React/Frontend
-  react: "react", nextjs: "react", "next.js": "react", typescript: "react",
-  javascript: "react", tailwind: "react", redux: "react", vue: "react",
-  angular: "react", css: "react", html: "react", frontend: "react",
-  // ML
-  pytorch: "ml", tensorflow: "ml", "scikit-learn": "ml", pandas: "ml",
-  numpy: "ml", "machine learning": "ml", ml: "ml", "deep learning": "ml",
-  // OOP
-  java: "oop", "c++": "oop", "c#": "oop", kotlin: "oop", swift: "oop",
-  // DSA
-  algorithms: "dsa", "data structures": "dsa",
+  react: "react",
+  nextjs: "react",
+  "next.js": "react",
+  typescript: "react",
+  javascript: "react",
+  tailwind: "react",
+  redux: "react",
+  vue: "react",
+  angular: "react",
+  css: "react",
+  html: "react",
+  frontend: "react",
+
+  pytorch: "ml",
+  tensorflow: "ml",
+  "scikit-learn": "ml",
+  pandas: "ml",
+  numpy: "ml",
+  "machine learning": "ml",
+  ml: "ml",
+  "deep learning": "ml",
+
+  java: "oop",
+  "c++": "oop",
+  "c#": "oop",
+  kotlin: "oop",
+  swift: "oop",
+
+  algorithms: "dsa",
+  "data structures": "dsa",
 };
 
 function detectDomainFromSkills(skills: string[]): string | null {
   const counts: Record<string, number> = {};
+
   for (const skill of skills) {
     const domain = SKILL_DOMAIN_MAP[skill.toLowerCase()];
     if (domain) {
       counts[domain] = (counts[domain] || 0) + 1;
     }
   }
+
   if (!Object.keys(counts).length) return null;
+
   return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
 }
 
@@ -58,11 +109,12 @@ export default function ConfigPage() {
   const [uploadDone, setUploadDone] = useState(false);
   const [uploadedSkills, setUploadedSkills] = useState<string[]>([]);
   const [autoDetected, setAutoDetected] = useState(false);
+
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // Pre-select from URL param (e.g. clicking domain card on dashboard)
   useEffect(() => {
     const cat = searchParams.get("category");
+
     if (cat && CATEGORIES.find((c) => c.id === cat)) {
       setCategory(cat);
     }
@@ -70,21 +122,29 @@ export default function ConfigPage() {
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+
     if (!file) return;
+
     setUploading(true);
     setError("");
+
     try {
       const form = new FormData();
       form.append("file", file);
+
       const { data } = await api.post("/resume/upload", form, {
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
+
       const skills: string[] = data.extracted_skills || [];
+
       setUploadedSkills(skills);
       setUploadDone(true);
 
-      // Auto-detect domain from skills
       const detected = detectDomainFromSkills(skills);
+
       if (detected && !category) {
         setCategory(detected);
         setAutoDetected(true);
@@ -97,24 +157,31 @@ export default function ConfigPage() {
   };
 
   const handleStart = async () => {
-    if (!category) {
-      setError("Please select a domain.");
+    if (mode === "general" && !category) {
+      setError("Please select a domain for general mode.");
       return;
     }
+
     if (mode === "resume" && !uploadDone) {
-      setError("Please upload your resume for resume mode.");
+      setError("Please upload your resume first.");
       return;
     }
+
     setError("");
     setLoading(true);
+
     try {
-      const { data } = await api.post("/questions/generate", { category, mode });
+      const { data } = await api.post("/questions/generate", {
+        category: category || undefined,
+        mode,
+      });
+
       setPaper(data.paper_id, data.category, mode, data.questions);
       router.push("/session");
     } catch (err: any) {
       setError(
         err.response?.data?.detail ||
-        "Failed to generate interview. Please try again."
+          "Failed to generate interview. Please try again."
       );
     } finally {
       setLoading(false);
@@ -124,27 +191,33 @@ export default function ConfigPage() {
   return (
     <div className="min-h-screen bg-gray-950">
       <Navbar />
+
       <div className="max-w-3xl mx-auto px-4 py-12">
         <div className="mb-10">
-          <h1 className="text-2xl font-bold text-white">Configure your interview</h1>
+          <h1 className="text-2xl font-bold text-white">
+            Configure your interview
+          </h1>
+
           <p className="text-gray-400 mt-1 text-sm">
             Choose your domain and interview mode to get started
           </p>
         </div>
 
-        {/* Mode selection — moved to top so resume upload appears before domain */}
         <div className="mb-8">
           <h2 className="text-sm font-medium text-gray-300 mb-3 uppercase tracking-wide">
             Interview Mode
           </h2>
+
           <div className="grid grid-cols-2 gap-3">
             {MODES.map((m) => (
               <button
                 key={m.id}
                 onClick={() => {
                   setMode(m.id);
-                  // Reset auto-detection when switching modes
-                  if (m.id === "general") setAutoDetected(false);
+
+                  if (m.id === "general") {
+                    setAutoDetected(false);
+                  }
                 }}
                 className={`text-left p-4 rounded-xl border transition-all ${
                   mode === m.id
@@ -160,12 +233,12 @@ export default function ConfigPage() {
           </div>
         </div>
 
-        {/* Resume upload — shown in resume mode, BEFORE domain */}
         {mode === "resume" && (
           <div className="mb-8">
             <h2 className="text-sm font-medium text-gray-300 mb-3 uppercase tracking-wide">
               Upload Resume
             </h2>
+
             <div
               onClick={() => fileRef.current?.click()}
               className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
@@ -181,6 +254,7 @@ export default function ConfigPage() {
                 className="hidden"
                 onChange={handleUpload}
               />
+
               {uploading ? (
                 <div className="flex items-center justify-center gap-2">
                   <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
@@ -191,11 +265,13 @@ export default function ConfigPage() {
                   <p className="text-green-400 text-sm font-medium mb-3">
                     ✓ Resume uploaded successfully
                   </p>
+
                   {uploadedSkills.length > 0 && (
                     <div>
                       <p className="text-gray-400 text-xs mb-2">
                         Detected {uploadedSkills.length} skills:
                       </p>
+
                       <div className="flex flex-wrap gap-1.5 justify-center">
                         {uploadedSkills.slice(0, 14).map((s) => (
                           <span
@@ -214,30 +290,33 @@ export default function ConfigPage() {
                   <p className="text-gray-400 text-sm">
                     Drop your PDF resume here or click to browse
                   </p>
-                  <p className="text-gray-600 text-xs mt-1">Max 5MB · PDF only</p>
+
+                  <p className="text-gray-600 text-xs mt-1">
+                    Max 5MB · PDF only
+                  </p>
                 </div>
               )}
             </div>
 
-            {/* Auto-detected domain notice */}
             {autoDetected && category && (
               <div className="mt-3 flex items-center gap-2 text-xs text-indigo-400 bg-indigo-950 border border-indigo-900 rounded-lg px-3 py-2">
                 <span>✨</span>
                 <span>
-                  Domain auto-selected based on your resume skills. You can change it below.
+                  Domain auto-selected based on your resume skills. You can
+                  change it below.
                 </span>
               </div>
             )}
           </div>
         )}
 
-        {/* Domain selection */}
         <div className="mb-8">
           <h2 className="text-sm font-medium text-gray-300 mb-3 uppercase tracking-wide">
-            {mode === "resume" && uploadDone
-              ? "Confirm Domain"
+            {mode === "resume"
+              ? "Domain Override (optional)"
               : "Select Domain"}
           </h2>
+
           <div className="grid grid-cols-2 gap-3">
             {CATEGORIES.map((cat) => (
               <button
@@ -253,11 +332,21 @@ export default function ConfigPage() {
                 }`}
               >
                 <div className="text-2xl mb-2">{cat.icon}</div>
-                <div className="text-sm font-medium text-white">{cat.label}</div>
+                <div className="text-sm font-medium text-white">
+                  {cat.label}
+                </div>
                 <div className="text-xs text-gray-500 mt-1">{cat.desc}</div>
               </button>
             ))}
           </div>
+
+          {mode === "resume" && (
+            <p className="text-xs text-gray-600 mt-2">
+              {category
+                ? "You selected a domain. Gemini will focus questions here."
+                : "No domain selected — Gemini will pick the best one from your resume."}
+            </p>
+          )}
         </div>
 
         {error && (
@@ -268,23 +357,44 @@ export default function ConfigPage() {
 
         <button
           onClick={handleStart}
-          disabled={loading || !category || (mode === "resume" && !uploadDone)}
+          disabled={
+            loading ||
+            (mode === "general" && !category) ||
+            (mode === "resume" && !uploadDone)
+          }
           className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-gray-800 disabled:text-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-xl py-3 text-sm transition-colors"
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
-              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+              <svg
+                className="animate-spin h-4 w-4"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v8z"
+                />
               </svg>
-              Generating your personalized interview...
+
+              {mode === "resume" && !category
+                ? "Analyzing resume and generating interview..."
+                : "Generating your personalized interview..."}
             </span>
           ) : (
             "Start Interview →"
           )}
         </button>
 
-        {/* Helper text when button is disabled */}
         {mode === "resume" && !uploadDone && (
           <p className="text-center text-xs text-gray-600 mt-3">
             Upload your resume to enable resume mode

@@ -295,8 +295,11 @@ def get_general_paper(db: Session, user_id: int, category: str) -> dict:
     }
 
 
-def get_resume_paper(db: Session, user_id: int, category: str) -> dict:
-    # Check resume exists
+def get_resume_paper(
+    db: Session,
+    user_id: int,
+    category: str | None = None,
+) -> dict:
     profile = (
         db.query(ResumeProfile)
         .filter(ResumeProfile.user_id == user_id)
@@ -306,6 +309,18 @@ def get_resume_paper(db: Session, user_id: int, category: str) -> dict:
         raise ValueError(
             "No resume found. Please upload your resume first."
         )
+
+    skills = json.loads(profile.extracted_skills or "[]")
+    projects = json.loads(profile.extracted_projects or "[]")
+
+    if not skills and not projects:
+        raise ValueError(
+            "Could not extract enough information from your resume."
+        )
+
+    # If no category provided, let Gemini decide
+    if not category:
+        category = infer_domain_from_profile(skills, projects)
 
     questions, difficulty = generate_questions_with_llm(
         db=db,
@@ -322,4 +337,42 @@ def get_resume_paper(db: Session, user_id: int, category: str) -> dict:
         "category": category,
         "difficulty": difficulty,
         "questions": questions,
+        "domain_inferred": True,
     }
+
+def infer_domain_from_profile(
+    skills: list[str],
+    projects: list[dict],
+) -> str:
+    """Ask Gemini to pick the most relevant domain based on resume."""
+    skills_str = ", ".join(skills[:15]) if skills else "not specified"
+    projects_str = "\n".join([
+        f"- {p.get('title', '')}: {p.get('description', '')[:80]}"
+        for p in projects[:4]
+    ]) if projects else "not specified"
+
+    prompt = f"""Based on this candidate's technical profile, which ONE domain should their technical interview focus on?
+
+Skills: {skills_str}
+
+Projects:
+{projects_str}
+
+Choose exactly one from: dsa, oop, ml, react
+
+Rules:
+- If they have React/Next.js/frontend skills → react
+- If they have ML/AI/data science skills → ml
+- If they have Java/C++/C# or strong OOP patterns → oop
+- Otherwise → dsa (most common for general software engineers)
+
+Reply with just the domain key, nothing else. Example: react"""
+
+    try:
+        raw = call_gemini(prompt).strip().lower()
+        if raw in ("dsa", "oop", "ml", "react"):
+            return raw
+    except Exception:
+        pass
+
+    return "dsa"

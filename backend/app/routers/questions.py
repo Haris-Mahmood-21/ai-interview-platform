@@ -1,13 +1,12 @@
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-import json
 
 from app.dependencies.auth import get_current_user
 from app.dependencies.db import get_db
 from app.models.attempt import Attempt
-from app.models.generated_paper import GeneratedPaper
-from app.models.question import Question
 from app.models.user import User
 from app.schemas.question import InterviewPaperResponse
 from app.services.question_generator import get_general_paper, get_resume_paper
@@ -19,8 +18,8 @@ VALID_CATEGORIES = {"dsa", "oop", "ml", "react"}
 
 
 class GeneratePaperRequest(BaseModel):
-    category: str       # dsa, opp, ml, react
-    mode: str           # general, resume
+    category: Optional[str] = None
+    mode: str
 
 
 @router.post("/generate", response_model=InterviewPaperResponse)
@@ -29,16 +28,22 @@ def generate_paper(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    if data.category not in VALID_CATEGORIES:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Category must be one of: {', '.join(VALID_CATEGORIES)}"
-        )
-
     if data.mode not in {"general", "resume"}:
         raise HTTPException(
             status_code=400,
-            detail="Mode must be either 'general' or 'resume'"
+            detail="Mode must be either 'general' or 'resume'",
+        )
+
+    if data.mode == "general" and not data.category:
+        raise HTTPException(
+            status_code=400,
+            detail="Please select a domain for general mode.",
+        )
+
+    if data.category and data.category not in VALID_CATEGORIES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Domain must be one of: {', '.join(VALID_CATEGORIES)}",
         )
 
     try:
@@ -54,21 +59,19 @@ def generate_paper(
                 user_id=current_user.id,
                 category=data.category,
             )
+
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to generate paper: {str(e)}"
+            detail=f"Failed to generate paper: {str(e)}",
         )
 
-    # Add category to paper for response
-    paper["category"] = data.category
-    return paper
+    paper["category"] = paper.get("category", data.category or "")
 
-from app.models.attempt import Attempt
-from app.services.scoring_service import calculate_total_score
-import json
+    return paper
 
 
 class SaveAttemptRequest(BaseModel):
@@ -76,7 +79,7 @@ class SaveAttemptRequest(BaseModel):
     mode: str
     coding_score: float
     theory_score: float
-    time_taken: int  # seconds
+    time_taken: int
 
 
 class SaveAttemptResponse(BaseModel):
@@ -101,6 +104,7 @@ def save_attempt(
         total_score=total,
         time_taken=data.time_taken,
     )
+
     db.add(attempt)
     db.commit()
     db.refresh(attempt)
