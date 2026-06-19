@@ -47,9 +47,13 @@ export interface TheoryEvaluation {
 
 export interface TheoryEvaluationResponse {
   evaluation: TheoryEvaluation;
+  needs_followup_check: boolean;
+  total_score: number;
+}
+
+export interface FollowupResponse {
   followup_questions: string[];
   has_followups: boolean;
-  total_score: number;
 }
 
 export interface CodeTestResult {

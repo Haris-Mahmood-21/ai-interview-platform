@@ -340,39 +340,48 @@ def get_resume_paper(
         "domain_inferred": True,
     }
 
+DOMAIN_KEYWORDS = {
+    "react": [
+        "react", "next.js", "nextjs", "frontend", "front-end", "vue",
+        "angular", "javascript", "typescript", "html", "css", "tailwind",
+        "redux", "node.js", "nodejs",
+    ],
+    "ml": [
+        "machine learning", "ml", "deep learning", "ai", "data science",
+        "tensorflow", "pytorch", "scikit", "nlp", "computer vision",
+        "pandas", "numpy", "neural network",
+    ],
+    "oop": [
+        "java", "c++", "c#", "oop", "object-oriented", "object oriented",
+        "design patterns", "spring", ".net", "dotnet",
+    ],
+}
+
+
 def infer_domain_from_profile(
     skills: list[str],
     projects: list[dict],
 ) -> str:
-    """Ask Gemini to pick the most relevant domain based on resume."""
-    skills_str = ", ".join(skills[:15]) if skills else "not specified"
-    projects_str = "\n".join([
-        f"- {p.get('title', '')}: {p.get('description', '')[:80]}"
-        for p in projects[:4]
-    ]) if projects else "not specified"
+    """
+    Pick the most relevant domain based on resume keywords.
 
-    prompt = f"""Based on this candidate's technical profile, which ONE domain should their technical interview focus on?
+    This used to make an extra Gemini call just to choose one of 4 fixed
+    categories — replaced with simple keyword matching so paper generation
+    doesn't pay for a second round-trip to the LLM.
+    """
+    text = " ".join(skills).lower()
+    text += " " + " ".join(
+        f"{p.get('title', '')} {p.get('description', '')}" for p in projects
+    ).lower()
 
-Skills: {skills_str}
+    scores = {domain: 0 for domain in DOMAIN_KEYWORDS}
+    for domain, keywords in DOMAIN_KEYWORDS.items():
+        for kw in keywords:
+            if kw in text:
+                scores[domain] += 1
 
-Projects:
-{projects_str}
+    best_domain = max(scores, key=scores.get)
+    if scores[best_domain] > 0:
+        return best_domain
 
-Choose exactly one from: dsa, oop, ml, react
-
-Rules:
-- If they have React/Next.js/frontend skills → react
-- If they have ML/AI/data science skills → ml
-- If they have Java/C++/C# or strong OOP patterns → oop
-- Otherwise → dsa (most common for general software engineers)
-
-Reply with just the domain key, nothing else. Example: react"""
-
-    try:
-        raw = call_gemini(prompt).strip().lower()
-        if raw in ("dsa", "oop", "ml", "react"):
-            return raw
-    except Exception:
-        pass
-
-    return "dsa"
+    return "dsa"  # default — most common for general software engineers

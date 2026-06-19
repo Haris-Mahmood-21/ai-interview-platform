@@ -10,6 +10,8 @@ export interface QuestionResult {
   type: "coding" | "theory";
   answer: string;
   evaluation?: TheoryEvaluationResponse;
+  followupQuestions?: string[];
+  followupsLoading?: boolean;
   codeResult?: CodeSubmissionResponse;
   followupAnswers?: {
     question: string;

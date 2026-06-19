@@ -10,6 +10,7 @@ import api from "@/lib/api";
 import {
   TheoryEvaluationResponse,
   CodeSubmissionResponse,
+  FollowupResponse,
 } from "@/types/api.types";
 import Link from "next/link";
 
@@ -114,9 +115,34 @@ export default function SessionPage() {
         score: data.total_score,
         completed: true,
       });
+
+      setLoading(false);
+
+      // Followups depend on the evaluation result, so they can't be fetched
+      // in parallel — but we don't make the user wait for them. The score
+      // and feedback are already on screen; followups (if any) pop in
+      // a moment later.
+      if (data.needs_followup_check) {
+        setResult(currentIndex, { followupsLoading: true });
+
+        try {
+          const { data: followupData }: { data: FollowupResponse } =
+            await api.post("/theory/followup", {
+              question: currentQuestion.question_text,
+              answer: theoryAnswer,
+              evaluation: data.evaluation,
+            });
+
+          setResult(currentIndex, {
+            followupQuestions: followupData.followup_questions,
+            followupsLoading: false,
+          });
+        } catch {
+          setResult(currentIndex, { followupsLoading: false });
+        }
+      }
     } catch (err: any) {
       setError(err.response?.data?.detail || "Evaluation failed. Try again.");
-    } finally {
       setLoading(false);
     }
   };
@@ -446,9 +472,17 @@ export default function SessionPage() {
             )}
 
             {/* Follow-up — below Next button */}
-            {isAnswered && currentResult.evaluation?.has_followups && (
+            {isAnswered && currentResult.followupsLoading && (
+              <p className="text-xs text-gray-500 px-1">
+                Checking if a follow-up question is needed…
+              </p>
+            )}
+
+            {isAnswered &&
+              currentResult.followupQuestions &&
+              currentResult.followupQuestions.length > 0 && (
               <div className="space-y-3">
-                {currentResult.evaluation.followup_questions
+                {currentResult.followupQuestions
                   .filter(
                     (fq) =>
                       !currentResult.followupAnswers?.find(

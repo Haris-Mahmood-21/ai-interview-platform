@@ -27,8 +27,7 @@ class TheoryEvaluationRequest(BaseModel):
 
 class TheoryEvaluationResponse(BaseModel):
     evaluation: dict
-    followup_questions: list[str]
-    has_followups: bool
+    needs_followup_check: bool
     total_score: float
 
 
@@ -76,15 +75,42 @@ def evaluate_theory(
         db.add(response)
         db.commit()
 
-    followups = generate_followup_questions(
-        original_question=data.question,
-        user_answer=data.answer,
-        evaluation=evaluation,
-    )
+    # Followups are no longer generated here — this used to make a second
+    # sequential Gemini call before the response could return. The frontend
+    # now calls /theory/followup separately (only when needed), so the
+    # evaluation result comes back to the user immediately.
+    should_check, _ = should_ask_followup(evaluation)
 
     return TheoryEvaluationResponse(
         evaluation=evaluation,
+        needs_followup_check=should_check,
+        total_score=evaluation.get("total_score", 0),
+    )
+
+
+class FollowupRequest(BaseModel):
+    question: str
+    answer: str
+    evaluation: dict
+
+
+class FollowupResponse(BaseModel):
+    followup_questions: list[str]
+    has_followups: bool
+
+
+@router.post("/followup", response_model=FollowupResponse)
+def get_followup_questions(
+    data: FollowupRequest,
+    current_user: User = Depends(get_current_user),
+):
+    followups = generate_followup_questions(
+        original_question=data.question,
+        user_answer=data.answer,
+        evaluation=data.evaluation,
+    )
+
+    return FollowupResponse(
         followup_questions=followups,
         has_followups=len(followups) > 0,
-        total_score=evaluation.get("total_score", 0),
     )
