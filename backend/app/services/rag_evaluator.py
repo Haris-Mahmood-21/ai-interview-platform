@@ -46,6 +46,19 @@ Evaluate on exactly these 4 criteria. Each is scored 0-25:
 - Depth (0-25): Does it go beyond surface level? (junior standard, not expert)
 - Conceptual Understanding (0-25): Does the candidate grasp the underlying concept?
 
+FOLLOW-UP QUESTION RULES:
+After scoring, decide whether to generate follow-up questions based on the total score (sum of all 4 criteria):
+- total_score >= 80: No follow-ups needed. Set "followups" to an empty array [].
+- 55 <= total_score < 80: Generate exactly 1 targeted follow-up question.
+- total_score < 55: Generate exactly 2 targeted follow-up questions.
+
+Follow-up questions must:
+1. Be specific to what the candidate said (or failed to say)
+2. Feel natural — like a real interviewer following up
+3. Cannot be answered with yes or no
+4. Progress from their answer rather than starting over
+5. Target the weakest criteria (those with the lowest scores)
+
 Return your evaluation as valid JSON only, no markdown, no code blocks:
 
 {{
@@ -67,7 +80,8 @@ Return your evaluation as valid JSON only, no markdown, no code blocks:
   }},
   "total_score": <sum of all 4>,
   "overall_feedback": "<2-3 sentences of constructive feedback>",
-  "improvement_suggestions": "<specific topics to study or practice>"
+  "improvement_suggestions": "<specific topics to study or practice>",
+  "followups": ["<follow-up question 1>", "<follow-up question 2 if needed>"]
 }}"""
 
 
@@ -98,7 +112,7 @@ def evaluate_theory_answer(
     prompt = build_evaluation_prompt(question, user_answer, context_chunks)
 
     # Step 3: Call Gemini
-    raw_response = call_gemini(prompt)
+    raw_response = call_gemini(prompt, max_output_tokens=2048)
 
     # Step 4: Parse JSON response
     return parse_evaluation_response(raw_response)
@@ -109,7 +123,11 @@ def parse_evaluation_response(raw: str) -> dict:
     try:
         # Strip any accidental markdown code fences
         clean = re.sub(r"```json|```", "", raw).strip()
-        return json.loads(clean)
+        result = json.loads(clean)
+        # Ensure followups key always exists
+        if "followups" not in result:
+            result["followups"] = []
+        return result
     except (json.JSONDecodeError, ValueError):
         # Return a safe fallback so the endpoint never crashes
         return {
@@ -120,4 +138,5 @@ def parse_evaluation_response(raw: str) -> dict:
             "total_score": 0,
             "overall_feedback": "Evaluation failed. Please try again.",
             "improvement_suggestions": "N/A",
+            "followups": [],
         }

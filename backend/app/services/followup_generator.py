@@ -133,7 +133,7 @@ def generate_followup_questions(
     )
 
     # Step 4: Call Gemini
-    raw = call_gemini(prompt)
+    raw = call_gemini(prompt, max_output_tokens=1024)
 
     # Step 5: Parse response
     try:

@@ -24,7 +24,7 @@ Built with FastAPI, Next.js, Gemini AI, ChromaDB, PostgreSQL, and Judge0.
 ## Tech Stack
 
 ### Frontend
-- Next.js 14
+- Next.js 16
 - TypeScript
 - Tailwind CSS
 - Zustand
@@ -236,6 +236,16 @@ http://localhost:8000/docs
 - Live collaborative interviews
 - Multi-language support
 - Advanced interviewer personas
+
+## Performance Notes
+
+The backend has been optimized for lower latency across all interview flows:
+
+- **Concurrent Judge0 test execution** — Code submissions run all test cases in parallel via `ThreadPoolExecutor` instead of sequentially, reducing worst-case coding submission latency from N×(submit+poll) to ~1×(submit+poll)
+- **Combined evaluation + follow-up Gemini call** — Theory answer evaluation and follow-up question generation are merged into a single Gemini request, eliminating a second sequential round-trip on weak answers
+- **Preloaded RAG model at startup** — SentenceTransformer embedding model, ChromaDB collection, and Gemini model instance are warmed during app startup via a FastAPI lifespan handler, removing cold-start latency from the first user request
+- **Gemini call hardening** — All Gemini calls now have a 30-second timeout and explicit `max_output_tokens` caps matched to each prompt's needs, preventing hung requests and reducing generation time
+- **Tuned DB connection pool** — SQLAlchemy engine configured with `pool_size=10, max_overflow=20` for reliable behavior under concurrent user load
 
 ---
 

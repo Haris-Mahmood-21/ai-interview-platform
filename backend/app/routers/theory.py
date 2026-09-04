@@ -29,6 +29,8 @@ class TheoryEvaluationResponse(BaseModel):
     evaluation: dict
     needs_followup_check: bool
     total_score: float
+    followup_questions: list[str] = []
+    has_followups: bool = False
 
 
 @router.post("/evaluate", response_model=TheoryEvaluationResponse)
@@ -75,16 +77,21 @@ def evaluate_theory(
         db.add(response)
         db.commit()
 
-    # Followups are no longer generated here — this used to make a second
-    # sequential Gemini call before the response could return. The frontend
-    # now calls /theory/followup separately (only when needed), so the
-    # evaluation result comes back to the user immediately.
     should_check, _ = should_ask_followup(evaluation)
+
+    # Follow-ups are now generated in the same Gemini call as the evaluation
+    followups = evaluation.get("followups", [])
+    # Sanitize: ensure it's a list of strings
+    if not isinstance(followups, list):
+        followups = []
+    followups = [q for q in followups if isinstance(q, str) and q.strip()]
 
     return TheoryEvaluationResponse(
         evaluation=evaluation,
         needs_followup_check=should_check,
         total_score=evaluation.get("total_score", 0),
+        followup_questions=followups,
+        has_followups=len(followups) > 0,
     )
 
 
@@ -104,6 +111,17 @@ def get_followup_questions(
     data: FollowupRequest,
     current_user: User = Depends(get_current_user),
 ):
+    # Prefer pre-generated followups from the combined evaluation call
+    existing = data.evaluation.get("followups", [])
+    if isinstance(existing, list) and existing:
+        followups = [q for q in existing if isinstance(q, str) and q.strip()]
+        if followups:
+            return FollowupResponse(
+                followup_questions=followups,
+                has_followups=True,
+            )
+
+    # Fallback: generate separately (only if combined call didn't produce them)
     followups = generate_followup_questions(
         original_question=data.question,
         user_answer=data.answer,

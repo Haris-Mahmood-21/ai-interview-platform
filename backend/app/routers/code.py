@@ -1,4 +1,5 @@
 import json
+from concurrent.futures import ThreadPoolExecutor
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -111,8 +112,9 @@ def submit_code_solution(
     # Normalize line endings
     clean_code = data.source_code.replace("\r\n", "\n").replace("\r", "\n")
 
-    results = []
-    for i, tc in enumerate(test_cases):
+    # Run a single test case through Judge0 and return its result dict.
+    def _run_test_case(args: tuple[int, dict]) -> dict:
+        i, tc = args
         stdin_input = tc.get("input", "")
         expected = tc.get("expected", "").strip()
 
@@ -130,7 +132,7 @@ def submit_code_solution(
             and outputs_match(actual_output, expected)
         )
 
-        results.append({
+        return {
             "test_case": i + 1,
             "passed": passed,
             "expected": expected,
@@ -138,7 +140,11 @@ def submit_code_solution(
             "status": result.get("status_description", ""),
             "error": result.get("stderr") or result.get("compile_output") or "",
             "time": result.get("time"),
-        })
+        }
+
+    # Submit all test cases concurrently — biggest single latency win
+    with ThreadPoolExecutor(max_workers=len(test_cases)) as executor:
+        results = list(executor.map(_run_test_case, enumerate(test_cases)))
 
     score = calculate_coding_score(results)
     passed_count = sum(1 for r in results if r["passed"])
