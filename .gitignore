@@ -24,6 +24,10 @@ backend/uploads/
 # ChromaDB local data
 backend/chroma_data/
 
+# Planning docs (internal use — not for repo)
+backend-planning.md
+frontend-planning.md
+
 # OS
 .DS_Store
 Thumbs.db
