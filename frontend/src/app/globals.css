@@ -1,26 +1,159 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+
+/*
+ * Design System — AI Interview Platform
+ * Dark-only theme using the existing gray-950/900/800 + indigo-600 palette,
+ * now tokenized via CSS variables so shadcn components and custom UI
+ * share one source of truth.
+ *
+ * Color format: oklch values for Tailwind v4 compatibility.
+ * Semantic tokens (success/warning/danger) map to the green/yellow/red
+ * already used in difficulty badges and correct/incorrect states.
+ */
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* ── Core ─────────────────────────────────────────────── */
+  --background: oklch(0.145 0.000 0);        /* gray-950 (#0a0a0a) */
+  --foreground: oklch(0.985 0.000 0);        /* gray-50  (#fafafa)  */
+
+  /* ── Cards & surfaces ─────────────────────────────────── */
+  --card: oklch(0.205 0.006 286);            /* gray-900 (#111827) */
+  --card-foreground: oklch(0.985 0.000 0);   /* gray-50  */
+
+  /* ── Popover/dialog overlays ──────────────────────────── */
+  --popover: oklch(0.205 0.006 286);         /* same as card */
+  --popover-foreground: oklch(0.985 0.000 0);
+
+  /* ── Primary action (indigo-600) ──────────────────────── */
+  --primary: oklch(0.541 0.190 275);         /* indigo-600 (#4f46e5) */
+  --primary-foreground: oklch(0.985 0.000 0);/* white */
+
+  /* ── Secondary (gray-800) ─────────────────────────────── */
+  --secondary: oklch(0.269 0.006 286);       /* gray-800 (#1f2937) */
+  --secondary-foreground: oklch(0.870 0.000 0);/* gray-300 */
+
+  /* ── Muted (subdued text & backgrounds) ───────────────── */
+  --muted: oklch(0.269 0.006 286);           /* gray-800 */
+  --muted-foreground: oklch(0.708 0.000 0);  /* gray-400 (#9ca3af) */
+
+  /* ── Accents (hover states) ───────────────────────────── */
+  --accent: oklch(0.269 0.006 286);          /* gray-800 */
+  --accent-foreground: oklch(0.985 0.000 0);
+
+  /* ── Borders & inputs ─────────────────────────────────── */
+  --border: oklch(0.350 0.006 286);          /* gray-700 (#374151) */
+  --input: oklch(0.350 0.006 286);           /* gray-700 */
+  --ring: oklch(0.541 0.190 275);            /* indigo-600 (focus ring) */
+
+  /* ── Destructive (errors) ─────────────────────────────── */
+  --destructive: oklch(0.577 0.245 27.325);  /* red-500 */
+
+  /* ── Radius ───────────────────────────────────────────── */
+  --radius: 0.625rem;                        /* 10px — rounded-lg feel */
+
+  /* ── Semantic status colors ───────────────────────────── */
+  --success: oklch(0.723 0.191 149.58);      /* green-400 */
+  --success-foreground: oklch(0.145 0.000 0);
+  --warning: oklch(0.852 0.199 91.94);       /* yellow-400 */
+  --warning-foreground: oklch(0.145 0.000 0);
+  --danger: oklch(0.704 0.191 22.22);        /* red-400 */
+  --danger-foreground: oklch(0.985 0.000 0);
+
+  /* ── Chart colors ─────────────────────────────────────── */
+  --chart-1: oklch(0.541 0.190 275);         /* indigo-600 */
+  --chart-2: oklch(0.723 0.191 149.58);      /* green-400 */
+  --chart-3: oklch(0.852 0.199 91.94);       /* yellow-400 */
+  --chart-4: oklch(0.704 0.191 22.22);       /* red-400 */
+  --chart-5: oklch(0.650 0.200 250);         /* blue-400 */
+
+  /* ── Sidebar (inherits card) ──────────────────────────── */
+  --sidebar: oklch(0.205 0.006 286);
+  --sidebar-foreground: oklch(0.985 0.000 0);
+  --sidebar-primary: oklch(0.541 0.190 275);
+  --sidebar-primary-foreground: oklch(0.985 0.000 0);
+  --sidebar-accent: oklch(0.269 0.006 286);
+  --sidebar-accent-foreground: oklch(0.985 0.000 0);
+  --sidebar-border: oklch(0.350 0.006 286);
+  --sidebar-ring: oklch(0.541 0.190 275);
 }
 
+/*
+ * Wire CSS variables into Tailwind v4's @theme system so they are
+ * available as utility classes (bg-card, text-muted-foreground, etc.).
+ * Also register the font families and spacing scale.
+ */
 @theme inline {
+  /* Colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-destructive: var(--destructive);
+
+  /* Semantic status */
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+
+  /* Charts */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* Sidebar */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Fonts */
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
+
+  /* Radius */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* ── Base styles ──────────────────────────────────────────── */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+/*
+ * Force dark border color on all elements — prevents default
+ * light-mode borders from leaking through on any unstyled element.
+ */
+*,
+::after,
+::before,
+::backdrop,
+::file-selector-button {
+  border-color: var(--border);
 }

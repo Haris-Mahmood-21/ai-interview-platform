@@ -50,7 +50,7 @@ export default function ScoreTrendChart({ data }: { data: TrendPoint[] }) {
             fontSize: "12px",
             color: "#e5e7eb",
           }}
-          formatter={(value: number) => [`${value}%`, "Score"]}
+          formatter={((value: unknown) => [`${value}%`, "Score"]) as never}
         />
         <Line
           type="monotone"
