@@ -5,6 +5,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import api from "@/lib/api";
 import { useInterviewStore } from "@/store/interviewStore";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { motion, AnimatePresence } from "framer-motion";
 
 const CATEGORIES = [
   {
@@ -189,202 +193,265 @@ export default function ConfigPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div className="min-h-screen bg-background">
       <Navbar />
 
-      <div className="max-w-3xl mx-auto px-4 py-12">
+      <motion.div 
+        className="max-w-3xl mx-auto px-4 py-12"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+      >
         <div className="mb-10">
-          <h1 className="text-2xl font-bold text-white">
+          <h1 className="text-2xl font-bold text-foreground">
             Configure your interview
           </h1>
 
-          <p className="text-gray-400 mt-1 text-sm">
+          <p className="text-muted-foreground mt-1 text-sm">
             Choose your domain and interview mode to get started
           </p>
         </div>
 
         <div className="mb-8">
-          <h2 className="text-sm font-medium text-gray-300 mb-3 uppercase tracking-wide">
+          <h2 className="text-sm font-medium text-secondary-foreground mb-3 uppercase tracking-wide">
             Interview Mode
           </h2>
 
           <div className="grid grid-cols-2 gap-3">
-            {MODES.map((m) => (
-              <button
-                key={m.id}
-                onClick={() => {
-                  setMode(m.id);
+            {MODES.map((m) => {
+              const isSelected = mode === m.id;
+              return (
+                <Card
+                  key={m.id}
+                  onClick={() => {
+                    setMode(m.id);
 
-                  if (m.id === "general") {
-                    setAutoDetected(false);
-                  }
-                }}
-                className={`text-left p-4 rounded-xl border transition-all ${
-                  mode === m.id
-                    ? "border-indigo-500 bg-indigo-950"
-                    : "border-gray-800 bg-gray-900 hover:border-gray-600"
-                }`}
-              >
-                <div className="text-2xl mb-2">{m.icon}</div>
-                <div className="text-sm font-medium text-white">{m.label}</div>
-                <div className="text-xs text-gray-500 mt-1">{m.desc}</div>
-              </button>
-            ))}
+                    if (m.id === "general") {
+                      setAutoDetected(false);
+                    }
+                  }}
+                  className={`cursor-pointer transition-all hover:scale-[1.02] active:scale-100 ${
+                    isSelected
+                      ? "border-primary bg-primary/10 ring-1 ring-primary/20"
+                      : "border-border bg-card hover:border-border"
+                  }`}
+                >
+                  <CardContent className="p-4">
+                    <div className="text-2xl mb-2">{m.icon}</div>
+                    <div className="text-sm font-medium text-foreground">{m.label}</div>
+                    <div className="text-xs text-muted-foreground mt-1">{m.desc}</div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
 
-        {mode === "resume" && (
-          <div className="mb-8">
-            <h2 className="text-sm font-medium text-gray-300 mb-3 uppercase tracking-wide">
-              Upload Resume
-            </h2>
-
-            <div
-              onClick={() => fileRef.current?.click()}
-              className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
-                uploadDone
-                  ? "border-green-600 bg-green-950"
-                  : "border-gray-700 bg-gray-900 hover:border-gray-500"
-              }`}
+        <AnimatePresence mode="wait">
+          {mode === "resume" && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-8 overflow-hidden"
             >
-              <input
-                ref={fileRef}
-                type="file"
-                accept=".pdf"
-                className="hidden"
-                onChange={handleUpload}
-              />
+              <h2 className="text-sm font-medium text-secondary-foreground mb-3 uppercase tracking-wide">
+                Upload Resume
+              </h2>
 
-              {uploading ? (
-                <div className="flex items-center justify-center gap-2">
-                  <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-                  <p className="text-gray-400 text-sm">Parsing resume...</p>
-                </div>
-              ) : uploadDone ? (
-                <div>
-                  <p className="text-green-400 text-sm font-medium mb-3">
-                    ✓ Resume uploaded successfully
-                  </p>
+              <motion.div
+                layout
+                onClick={() => fileRef.current?.click()}
+                className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
+                  uploadDone
+                    ? "border-success bg-success/10"
+                    : "border-input bg-card hover:border-muted-foreground"
+                }`}
+              >
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept=".pdf"
+                  className="hidden"
+                  onChange={handleUpload}
+                />
 
-                  {uploadedSkills.length > 0 && (
-                    <div>
-                      <p className="text-gray-400 text-xs mb-2">
-                        Detected {uploadedSkills.length} skills:
+                <AnimatePresence mode="wait">
+                  {uploading ? (
+                    <motion.div 
+                      key="uploading"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="flex items-center justify-center gap-2"
+                    >
+                      <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                      <p className="text-muted-foreground text-sm">Parsing resume...</p>
+                    </motion.div>
+                  ) : uploadDone ? (
+                    <motion.div
+                      key="done"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                    >
+                      <p className="text-success text-sm font-medium mb-3">
+                        ✓ Resume uploaded successfully
                       </p>
 
-                      <div className="flex flex-wrap gap-1.5 justify-center">
-                        {uploadedSkills.slice(0, 14).map((s) => (
-                          <span
-                            key={s}
-                            className="text-xs bg-gray-800 text-gray-300 px-2 py-0.5 rounded-full"
-                          >
-                            {s}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
+                      {uploadedSkills.length > 0 && (
+                        <div>
+                          <p className="text-muted-foreground text-xs mb-2">
+                            Detected {uploadedSkills.length} skills:
+                          </p>
+
+                          <div className="flex flex-wrap gap-1.5 justify-center">
+                            {uploadedSkills.slice(0, 14).map((s) => (
+                              <Badge
+                                key={s}
+                                variant="secondary"
+                                className="text-xs font-mono"
+                              >
+                                {s}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="idle"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                    >
+                      <p className="text-muted-foreground text-sm">
+                        Drop your PDF resume here or click to browse
+                      </p>
+
+                      <p className="text-muted-foreground text-xs mt-1">
+                        Max 5MB · PDF only
+                      </p>
+                    </motion.div>
                   )}
-                </div>
-              ) : (
-                <div>
-                  <p className="text-gray-400 text-sm">
-                    Drop your PDF resume here or click to browse
-                  </p>
+                </AnimatePresence>
+              </motion.div>
 
-                  <p className="text-gray-600 text-xs mt-1">
-                    Max 5MB · PDF only
-                  </p>
-                </div>
+              {autoDetected && category && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-3 flex items-center gap-2 text-xs text-primary bg-primary/10 border border-primary/20 rounded-lg px-3 py-2"
+                >
+                  <span>✨</span>
+                  <span>
+                    Domain auto-selected based on your resume skills. You can
+                    change it below.
+                  </span>
+                </motion.div>
               )}
-            </div>
-
-            {autoDetected && category && (
-              <div className="mt-3 flex items-center gap-2 text-xs text-indigo-400 bg-indigo-950 border border-indigo-900 rounded-lg px-3 py-2">
-                <span>✨</span>
-                <span>
-                  Domain auto-selected based on your resume skills. You can
-                  change it below.
-                </span>
-              </div>
-            )}
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Domain selection */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-medium text-gray-300 uppercase tracking-wide">
+            <h2 className="text-sm font-medium text-secondary-foreground uppercase tracking-wide">
               {mode === "resume"
                 ? "Domain Override (optional)"
                 : "Select Domain"}
             </h2>
 
             {mode === "resume" && category && (
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => {
                   setCategory("");
                   setAutoDetected(false);
                 }}
-                className="text-xs text-gray-500 hover:text-red-400 border border-gray-700 hover:border-red-800 px-2.5 py-1 rounded-lg transition-colors"
+                className="text-xs text-muted-foreground hover:text-danger hover:border-danger/20 h-7"
               >
                 ✕ Clear selection
-              </button>
+              </Button>
             )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => {
-                  if (mode === "resume" && category === cat.id) {
-                    setCategory("");
-                    setAutoDetected(false);
-                  } else {
-                    setCategory(cat.id);
-                    setAutoDetected(false);
-                  }
-                }}
-                className={`text-left p-4 rounded-xl border transition-all ${
-                  category === cat.id
-                    ? "border-indigo-500 bg-indigo-950"
-                    : "border-gray-800 bg-gray-900 hover:border-gray-600"
-                }`}
-              >
-                <div className="text-2xl mb-2">{cat.icon}</div>
-
-                <div className="text-sm font-medium text-white">
-                  {cat.label}
-                </div>
-
-                <div className="text-xs text-gray-500 mt-1">{cat.desc}</div>
-              </button>
-            ))}
+            {CATEGORIES.map((cat) => {
+              const isSelected = category === cat.id;
+              return (
+                <Card
+                  key={cat.id}
+                  onClick={() => {
+                    if (mode === "resume" && category === cat.id) {
+                      setCategory("");
+                      setAutoDetected(false);
+                    } else {
+                      setCategory(cat.id);
+                      setAutoDetected(false);
+                    }
+                  }}
+                  className={`cursor-pointer transition-all hover:scale-[1.02] active:scale-100 ${
+                    isSelected
+                      ? "border-primary bg-primary/10 ring-1 ring-primary/20"
+                      : "border-border bg-card hover:border-border"
+                  }`}
+                >
+                  <CardContent className="p-4">
+                    <div className="text-2xl mb-2">{cat.icon}</div>
+                    <div className="text-sm font-medium text-foreground">
+                      {cat.label}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">{cat.desc}</div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
 
-          {mode === "resume" && (
-            <p className="text-xs text-gray-600 mt-2">
-              {category
-                ? "You selected a domain. Gemini will focus questions here."
-                : "No domain selected — Gemini will pick the best one from your resume."}
-            </p>
-          )}
+          <AnimatePresence>
+            {mode === "resume" && (
+              <motion.p 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="text-xs text-muted-foreground mt-2"
+              >
+                {category
+                  ? "You selected a domain. Gemini will focus questions here."
+                  : "No domain selected — Gemini will pick the best one from your resume."}
+              </motion.p>
+            )}
+          </AnimatePresence>
         </div>
 
-        {error && (
-          <div className="mb-6 bg-red-950 border border-red-800 text-red-300 text-sm rounded-lg px-4 py-3">
-            {error}
-          </div>
-        )}
+        <AnimatePresence>
+          {error && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-6 overflow-hidden"
+            >
+              <div className="bg-danger/10 border border-danger/20 text-danger text-sm rounded-lg px-4 py-3">
+                {error}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        <button
+        <Button
+          size="lg"
+          className="w-full font-medium"
           onClick={handleStart}
           disabled={
             loading ||
             (mode === "general" && !category) ||
             (mode === "resume" && !uploadDone)
           }
-          className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-gray-800 disabled:text-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-xl py-3 text-sm transition-colors"
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
@@ -416,14 +483,14 @@ export default function ConfigPage() {
           ) : (
             "Start Interview →"
           )}
-        </button>
+        </Button>
 
         {mode === "resume" && !uploadDone && (
-          <p className="text-center text-xs text-gray-600 mt-3">
+          <p className="text-center text-xs text-muted-foreground mt-3">
             Upload your resume to enable resume mode
           </p>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 }

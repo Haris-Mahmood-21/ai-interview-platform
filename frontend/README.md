@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# InterviewAI — Frontend
+
+The client-side application for **InterviewAI**, an AI-powered technical interview practice platform. Users can generate domain-specific interview questions (from a curated bank or their own resume), solve coding challenges in a live Monaco editor with Judge0 execution, answer theory questions evaluated by Gemini + RAG, and track their progress on a personal dashboard.
+
+## Tech Stack
+
+- **Next.js 16** (App Router) + **React 19** + **TypeScript**
+- **Tailwind CSS v4** with `@theme inline` design tokens
+- **shadcn/ui** (radix-nova style) — Button, Card, Badge, Input, Label, Dialog, Select, Textarea, Progress
+- **Framer Motion** — page transitions, staggered list entrances, animated score bars, expand/collapse
+- **Zustand** — auth and interview session state
+- **TanStack Query** + **Axios** — data fetching
+- **Monaco Editor** — live code editor for coding questions
+- **Recharts** — score trend charts on the dashboard
+- **Sonner** — toast notifications
+- **Lucide React** — icons
+
+## Design System
+
+Dark-only theme built on a tokenized CSS variable system in `globals.css`. The palette formalizes the existing gray-950/indigo-600 identity:
+
+| Token | Role | Mapped to |
+|-------|------|-----------|
+| `--background` | Page background | gray-950 |
+| `--card` | Card/surface background | gray-900 |
+| `--primary` | Actions, links, focus rings | indigo-600 |
+| `--secondary` | Subtle backgrounds, hover states | gray-800 |
+| `--muted-foreground` | Subdued text, labels | gray-400 |
+| `--border` | Borders, dividers | gray-700 |
+| `--success` / `--warning` / `--danger` | Score colors, difficulty badges | green-400 / yellow-400 / red-400 |
+
+Fonts: **Inter** (UI) + **JetBrains Mono** (code editor and code blocks), loaded via `next/font/google` with CSS variable mode.
+
+All shadcn components consume these tokens — no hardcoded color classes anywhere in pages or components.
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+# Install dependencies
+pnpm install
+
+# Start development server
 pnpm dev
-# or
-bun dev
+
+# Production build
+pnpm build
+
+# Start production server
+pnpm start
+
+# Lint
+pnpm lint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The app runs at [http://localhost:3000](http://localhost:3000). Requires the FastAPI backend running at the URL configured in `.env.local` (`NEXT_PUBLIC_API_URL`).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+src/
+├── app/
+│   ├── (auth)/          # Login, Register pages
+│   ├── (interview)/     # Config, Session pages
+│   ├── (dashboard)/     # Dashboard, Session detail pages
+│   ├── globals.css      # Design system tokens + @theme inline
+│   ├── layout.tsx       # Root layout (fonts, providers)
+│   └── providers.tsx    # TanStack Query provider
+├── components/
+│   ├── ui/              # shadcn primitives (Button, Card, Input, etc.)
+│   ├── layout/          # Navbar
+│   ├── dashboard/       # MetricCards, ScoreTrendChart, DomainStatsTable, SessionHistoryTable
+│   └── interview/       # FeedbackDisplay
+├── lib/
+│   ├── api.ts           # Axios instance
+│   └── utils.ts         # cn() utility for class merging
+├── store/               # Zustand stores (authStore, interviewStore)
+└── types/               # API type definitions
+```

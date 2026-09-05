@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import Navbar from "@/components/layout/Navbar";
 import MetricCards from "@/components/dashboard/MetricCards";
 import ScoreTrendChart from "@/components/dashboard/ScoreTrendChart";
@@ -10,6 +11,8 @@ import DomainStatsTable from "@/components/dashboard/DomainStatsTable";
 import SessionHistoryTable from "@/components/dashboard/SessionHistoryTable";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 interface DashboardData {
   total_sessions: number;
@@ -52,20 +55,20 @@ export default function DashboardPage() {
 
   if (!mounted || loading) {
     return (
-      <div className="min-h-screen bg-gray-950">
+      <div className="min-h-screen bg-background">
         <Navbar />
         <div className="max-w-5xl mx-auto px-4 py-10 space-y-6">
           <div className="flex items-center justify-between">
-            <div className="h-8 w-48 bg-gray-800 rounded-lg animate-pulse" />
-            <div className="h-10 w-36 bg-gray-800 rounded-xl animate-pulse" />
+            <div className="h-8 w-48 bg-secondary rounded-lg animate-pulse" />
+            <div className="h-10 w-36 bg-secondary rounded-xl animate-pulse" />
           </div>
           <div className="grid grid-cols-3 gap-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-28 bg-gray-900 border border-gray-800 rounded-xl animate-pulse" />
+              <div key={i} className="h-28 bg-card ring-1 ring-foreground/10 rounded-xl animate-pulse" />
             ))}
           </div>
-          <div className="h-64 bg-gray-900 border border-gray-800 rounded-2xl animate-pulse" />
-          <div className="h-48 bg-gray-900 border border-gray-800 rounded-2xl animate-pulse" />
+          <div className="h-64 bg-card ring-1 ring-foreground/10 rounded-2xl animate-pulse" />
+          <div className="h-48 bg-card ring-1 ring-foreground/10 rounded-2xl animate-pulse" />
         </div>
       </div>
     );
@@ -83,70 +86,80 @@ export default function DashboardPage() {
       sub: "across all sessions",
       color:
         (data?.avg_score ?? 0) >= 80
-          ? "text-green-400"
+          ? "text-success"
           : (data?.avg_score ?? 0) >= 60
-          ? "text-yellow-400"
-          : "text-white",
+          ? "text-warning"
+          : "text-foreground",
     },
     {
       label: "Best Score",
       value: data?.best_score ? `${data.best_score}%` : "—",
       sub: "personal best",
-      color: "text-indigo-400",
+      color: "text-primary",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="max-w-5xl mx-auto px-4 py-10 space-y-8">
+      <motion.div
+        className="max-w-5xl mx-auto px-4 py-10 space-y-8"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+      >
 
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-white">
+            <h1 className="text-2xl font-bold text-foreground">
               {user?.name ? `${user.name}'s Dashboard` : "Dashboard"}
             </h1>
-            <p className="text-gray-500 text-sm mt-1">
+            <p className="text-muted-foreground text-sm mt-1">
               Track your interview performance over time
             </p>
           </div>
-          <Link
-            href="/config"
-            className="bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-5 py-2.5 rounded-xl transition-colors"
-          >
-            New Interview →
-          </Link>
+          <Button asChild>
+            <Link href="/config">
+              New Interview →
+            </Link>
+          </Button>
         </div>
 
         {/* Metric cards */}
         <MetricCards metrics={metrics} />
 
         {/* Score trend */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-          <h2 className="text-sm font-medium text-white mb-5">
-            Score Trend
-          </h2>
-          <ScoreTrendChart data={data?.score_trend ?? []} />
-        </div>
+        <Card className="rounded-2xl">
+          <CardContent className="p-6">
+            <h2 className="text-sm font-medium text-foreground mb-5">
+              Score Trend
+            </h2>
+            <ScoreTrendChart data={data?.score_trend ?? []} />
+          </CardContent>
+        </Card>
 
         {/* Domain stats */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-          <h2 className="text-sm font-medium text-white mb-5">
-            Performance by Domain
-          </h2>
-          <DomainStatsTable stats={data?.domain_stats ?? []} />
-        </div>
+        <Card className="rounded-2xl">
+          <CardContent className="p-6">
+            <h2 className="text-sm font-medium text-foreground mb-5">
+              Performance by Domain
+            </h2>
+            <DomainStatsTable stats={data?.domain_stats ?? []} />
+          </CardContent>
+        </Card>
 
         {/* Session history */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-          <h2 className="text-sm font-medium text-white mb-5">
-            Session History
-          </h2>
-          <SessionHistoryTable attempts={data?.recent_attempts ?? []} />
-        </div>
+        <Card className="rounded-2xl">
+          <CardContent className="p-6">
+            <h2 className="text-sm font-medium text-foreground mb-5">
+              Session History
+            </h2>
+            <SessionHistoryTable attempts={data?.recent_attempts ?? []} />
+          </CardContent>
+        </Card>
 
-      </div>
+      </motion.div>
     </div>
   );
 }
