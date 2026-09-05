@@ -1,3 +1,8 @@
+"use client";
+
+import { motion } from "framer-motion";
+import { Card, CardContent } from "@/components/ui/card";
+
 interface Metric {
   label: string;
   value: string | number;
@@ -9,20 +14,26 @@ export default function MetricCards({ metrics }: { metrics: Metric[] }) {
   return (
     <div className="grid grid-cols-3 gap-4">
       {metrics.map((m, i) => (
-        <div
+        <motion.div
           key={i}
-          className="bg-gray-900 border border-gray-800 rounded-xl p-5"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: i * 0.08 }}
         >
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">
-            {m.label}
-          </p>
-          <p className={`text-3xl font-bold ${m.color || "text-white"}`}>
-            {m.value}
-          </p>
-          {m.sub && (
-            <p className="text-xs text-gray-500 mt-1">{m.sub}</p>
-          )}
-        </div>
+          <Card>
+            <CardContent>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">
+                {m.label}
+              </p>
+              <p className={`text-3xl font-bold ${m.color || "text-foreground"}`}>
+                {m.value}
+              </p>
+              {m.sub && (
+                <p className="text-xs text-muted-foreground mt-1">{m.sub}</p>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
       ))}
     </div>
   );

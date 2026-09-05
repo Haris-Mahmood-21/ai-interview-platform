@@ -1,3 +1,9 @@
+"use client";
+
+import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+
 const DOMAIN_ICONS: Record<string, string> = {
   dsa: "🧠",
   oop: "🧩",
@@ -22,21 +28,21 @@ interface DomainStat {
 function ScorePill({ score }: { score: number }) {
   const color =
     score >= 80
-      ? "text-green-400 bg-green-950 border-green-900"
+      ? "bg-success/10 text-success border-success/20"
       : score >= 60
-      ? "text-yellow-400 bg-yellow-950 border-yellow-900"
-      : "text-red-400 bg-red-950 border-red-900";
+      ? "bg-warning/10 text-warning border-warning/20"
+      : "bg-danger/10 text-danger border-danger/20";
   return (
-    <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${color}`}>
+    <Badge variant="outline" className={color}>
       {score}%
-    </span>
+    </Badge>
   );
 }
 
 export default function DomainStatsTable({ stats }: { stats: DomainStat[] }) {
   if (!stats.length) {
     return (
-      <div className="text-center py-8 text-gray-600 text-sm">
+      <div className="text-center py-8 text-muted-foreground text-sm">
         No domain data yet
       </div>
     );
@@ -44,31 +50,39 @@ export default function DomainStatsTable({ stats }: { stats: DomainStat[] }) {
 
   return (
     <div className="space-y-3">
-      {stats.map((s) => (
-        <div
+      {stats.map((s, i) => (
+        <motion.div
           key={s.category}
-          className="flex items-center gap-4 p-4 bg-gray-900 border border-gray-800 rounded-xl"
+          initial={{ opacity: 0, x: -12 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3, delay: i * 0.06 }}
         >
-          <span className="text-xl">{DOMAIN_ICONS[s.category] || "📁"}</span>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-white">
-              {DOMAIN_LABELS[s.category] || s.category}
-            </p>
-            <p className="text-xs text-gray-500 mt-0.5">
-              {s.attempts} session{s.attempts !== 1 ? "s" : ""}
-            </p>
-          </div>
-          <div className="flex items-center gap-4 text-right">
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Avg</p>
-              <ScorePill score={s.avg_score} />
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Best</p>
-              <ScorePill score={s.best_score} />
-            </div>
-          </div>
-        </div>
+          <Card>
+            <CardContent>
+              <div className="flex items-center gap-4">
+                <span className="text-xl">{DOMAIN_ICONS[s.category] || "📁"}</span>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-foreground">
+                    {DOMAIN_LABELS[s.category] || s.category}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {s.attempts} session{s.attempts !== 1 ? "s" : ""}
+                  </p>
+                </div>
+                <div className="flex items-center gap-4 text-right">
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Avg</p>
+                    <ScorePill score={s.avg_score} />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Best</p>
+                    <ScorePill score={s.best_score} />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       ))}
     </div>
   );
