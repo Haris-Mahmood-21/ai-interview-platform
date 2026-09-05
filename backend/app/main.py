@@ -1,5 +1,5 @@
 import logging
-from contextlib import contextmanager
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
@@ -12,8 +12,8 @@ from app.routers import auth, code, dashboard, questions, resume, theory
 logger = logging.getLogger(__name__)
 
 
-@contextmanager
-def lifespan(app: FastAPI):
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     """Preload heavy resources at startup so the first request is warm."""
     # Warm the SentenceTransformer embedding model (~2-3s cold load)
     try:
