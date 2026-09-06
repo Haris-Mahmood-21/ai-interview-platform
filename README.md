@@ -1,255 +1,171 @@
-# AI-Powered Interview Preparation Platform
+# InterviewAI 🤖
 
-An AI-powered interview preparation platform that simulates technical interviews using LLMs, RAG, and real-time code evaluation.
+An AI-powered technical interview preparation platform that simulates real-world interviews using Large Language Models (LLMs), Retrieval-Augmented Generation (RAG), and real-time code evaluation.
 
-Built with FastAPI, Next.js, Gemini AI, ChromaDB, PostgreSQL, and Judge0.
-
----
-
-## Features
-
-- AI-generated technical interview questions
-- Resume-based personalized interviews
-- Real-time coding question evaluation
-- Dynamic follow-up questions
-- RAG-powered concept assistance
-- Difficulty adaptation based on performance
-- JWT authentication system
-- Code execution using Judge0 API
-- Vector search using ChromaDB
-- Modern responsive UI with Next.js
+Built with a **FastAPI** backend and a **Next.js 16** (App Router) frontend, InterviewAI leverages **Google Gemini**, **ChromaDB**, **PostgreSQL**, and **Judge0** to provide dynamic, personalized, and adaptive interview experiences.
 
 ---
 
-## Tech Stack
+## ✨ Key Features
+
+- **AI-Generated Technical Questions:** Dynamically generated domain-specific coding and theory questions.
+- **Resume-Based Personalization:** Parses user resumes to tailor interviews based on past projects and skills.
+- **Real-Time Code Evaluation:** Integrated Monaco Editor with instant code execution and testing via the Judge0 API.
+- **RAG-Powered Concept Evaluation:** Context-aware grading and assistance using ChromaDB for accurate theory answer assessment.
+- **Adaptive Difficulty:** Automatically adjusts the complexity of follow-up questions based on the candidate's performance.
+- **Interactive Dashboard:** Tracks performance history, domain-specific stats, and score trends with animated Recharts visualizations.
+- **Modern Dark-Mode UI:** Polished interface featuring shadcn/ui, Tailwind CSS v4, and Framer Motion for seamless transitions.
+- **Secure Authentication:** Robust JWT-based auth system.
+
+---
+
+## 🛠️ Tech Stack
 
 ### Frontend
-- Next.js 16
-- TypeScript
-- Tailwind CSS
-- Zustand
-- TanStack Query
-- Monaco Editor
+- **Framework:** Next.js 16 (App Router), React 19, TypeScript
+- **Styling:** Tailwind CSS v4, shadcn/ui
+- **Animation:** Framer Motion
+- **State Management:** Zustand, TanStack Query
+- **Editor & Charts:** Monaco Editor, Recharts
 
 ### Backend
-- FastAPI
-- Python 3.11
-- SQLAlchemy
-- PostgreSQL
-- ChromaDB
-- Alembic
-
-### AI / NLP
-- Google Gemini API
-- sentence-transformers
-- all-MiniLM-L6-v2
-- spaCy
+- **Framework:** FastAPI, Python 3.11
+- **Database & ORM:** PostgreSQL, SQLAlchemy, Alembic
+- **Vector Database:** ChromaDB
+- **AI & NLP:** Google Gemini API (`gemini-2.5-flash`), `sentence-transformers` (`all-MiniLM-L6-v2`), spaCy
+- **Code Execution:** Judge0 API (via HTTPX)
 
 ### Infrastructure
-- Docker & Docker Compose
-- Judge0 API
+- **Containerization:** Docker & Docker Compose
+- **Package Management:** Poetry (Backend), pnpm (Frontend)
 
 ---
 
-## System Architecture
+## 🏗️ System Architecture
 
-```text
-Frontend (Next.js)
-       ↓
-Backend API (FastAPI)
-       ↓
- ┌───────────────┬───────────────┐
- ↓               ↓               ↓
-PostgreSQL    ChromaDB       Gemini API
-(User Data)   (RAG Search)   (Question Generation)
+```mermaid
+graph TD
+    Client[Next.js Frontend] <-->|REST API| API[FastAPI Backend]
+    
+    subgraph Backend Services
+        API <--> DB[(PostgreSQL)]
+        API <--> Vector[(ChromaDB)]
+        API <--> LLM[Google Gemini API]
+        API <--> CodeEval[Judge0 API]
+    end
 ```
 
 ---
 
-## Installation
+## 🚀 Getting Started
 
-### 1. Clone Repository
+### 1. Prerequisites
+- [Docker & Docker Compose](https://www.docker.com/)
+- [Node.js 20+](https://nodejs.org/) & [pnpm](https://pnpm.io/)
+- [Python 3.11+](https://www.python.org/) & [Poetry](https://python-poetry.org/)
+- API Keys: [Google Gemini](https://aistudio.google.com/) & [Judge0](https://rapidapi.com/judge0-official/api/judge0-ce)
 
+### 2. Clone the Repository
 ```bash
 git clone https://github.com/Haris-Mahmood-21/ai-interview-platform.git
 cd ai-interview-platform
 ```
 
----
-
-### 2. Start Docker Services
-
+### 3. Start Infrastructure Services
+Start PostgreSQL and ChromaDB via Docker:
 ```bash
 docker compose up -d
 ```
 
----
-
-### 3. Backend Setup
-
+### 4. Backend Setup
 ```bash
 cd backend
 
+# Configure and install dependencies
 poetry config virtualenvs.in-project true
 poetry install
 
+# Download spaCy model
 poetry run python -m spacy download en_core_web_sm
-```
 
-Create `.env` file:
-
-```bash
+# Setup environment variables
 cp .env.example .env
 ```
+Update your `.env` with the necessary keys (e.g., `GEMINI_API_KEY`, `JUDGE0_API_KEY`).
 
-Add your environment variables:
-
-```env
-DATABASE_URL=postgresql://postgres:password@localhost:5432/interview_db
-
-SECRET_KEY=your-secret-key
-
-GEMINI_API_KEY=your-gemini-api-key
-
-JUDGE0_API_KEY=your-judge0-api-key
-
-CHROMA_HOST=localhost
-CHROMA_PORT=8001
-```
-
----
-
-### 4. Run Database Migrations
-
+**Database Setup & Seeding:**
 ```bash
 poetry run alembic upgrade head
-```
-
----
-
-### 5. Seed Database
-
-```bash
 poetry run python scripts/seed_questions.py
-```
-
----
-
-### 6. Ingest Knowledge Base
-
-```bash
 poetry run python scripts/ingest_knowledge_base.py
 ```
 
----
-
-### 7. Start Backend Server
-
+**Start the API Server:**
 ```bash
 poetry run uvicorn app.main:app --reload --port 8000
 ```
+> **Backend API Docs:** `http://localhost:8000/docs`
 
-Backend Docs:
-
-```text
-http://localhost:8000/docs
-```
-
----
-
-### 8. Frontend Setup
-
-Open another terminal:
-
+### 5. Frontend Setup
+In a new terminal window:
 ```bash
 cd frontend
 
+# Install dependencies
 pnpm install
-```
 
-Create `.env.local`:
-
-```bash
+# Setup environment variables
 cp .env.example .env.local
 ```
 
----
-
-### 9. Start Frontend
-
+**Start the Development Server:**
 ```bash
 pnpm dev
 ```
-
-Frontend:
-
-```text
-http://localhost:3000
-```
+> **Frontend App:** `http://localhost:3000`
 
 ---
 
-## Interview Modes
+## ⚡ Performance Highlights
 
-### General Interview Mode
-- Domain-specific interviews
-- Adaptive difficulty progression
-- AI-generated technical questions
-
-### Resume Interview Mode
-- Resume parsing
-- Personalized interview generation
-- Skill and project-based questioning
+The backend has been rigorously optimized for minimal latency during interview flows:
+- **Concurrent Judge0 Execution:** Test cases for code submissions run in parallel via `ThreadPoolExecutor`, reducing worst-case latency from $O(N)$ to $O(1)$.
+- **Combined LLM Evaluation & Follow-ups:** Theory answer evaluation and follow-up question generation are merged into a single Gemini prompt, eliminating a redundant round-trip.
+- **Preloaded AI Models:** SentenceTransformer, ChromaDB, and Gemini client instances are warmed during FastAPI startup (`lifespan`), removing cold-start delays.
+- **Optimized DB Connection Pool:** Tuned SQLAlchemy engine configurations (`pool_size=10, max_overflow=20`) to handle concurrent user loads efficiently.
 
 ---
 
-## Project Structure
+## 🎨 UI/UX Highlights
+
+The frontend was completely redesigned to prioritize focus and flow:
+- **Centralized Design System:** Fully tokenized CSS variable system mapping to a strict dark-mode-only palette (gray-950/indigo-600).
+- **Smooth Interactions:** Framer Motion powers page transitions, staggered dashboard reveals, and score animations to prevent jarring instant state changes.
+- **Contextual Loading:** Loading states are directly tied to actual backend latency points (e.g., "Evaluating your answer..." vs generic spinners).
+- **Typography:** Purposeful pairing of Inter for UI and JetBrains Mono for the integrated coding environments.
+
+---
+
+## 📁 Project Structure
 
 ```text
 ai-interview-platform/
-│
-├── frontend/
-│
-├── backend/
-│
-├── docker-compose.yml
-│
-└── README.md
+├── frontend/             # Next.js App Router application
+├── backend/              # FastAPI server, AI logic, and database models
+├── docker-compose.yml    # Postgres & ChromaDB containers
+└── README.md             # Project documentation
 ```
 
 ---
 
-## API Documentation
-
-FastAPI Swagger Docs:
-
-```text
-http://localhost:8000/docs
-```
-
----
-
-## Future Improvements
-
-- Voice-based interviews
-- AI interview analytics
-- Live collaborative interviews
-- Multi-language support
-- Advanced interviewer personas
-
-## Performance Notes
-
-The backend has been optimized for lower latency across all interview flows:
-
-- **Concurrent Judge0 test execution** — Code submissions run all test cases in parallel via `ThreadPoolExecutor` instead of sequentially, reducing worst-case coding submission latency from N×(submit+poll) to ~1×(submit+poll)
-- **Combined evaluation + follow-up Gemini call** — Theory answer evaluation and follow-up question generation are merged into a single Gemini request, eliminating a second sequential round-trip on weak answers
-- **Preloaded RAG model at startup** — SentenceTransformer embedding model, ChromaDB collection, and Gemini model instance are warmed during app startup via a FastAPI lifespan handler, removing cold-start latency from the first user request
-- **Gemini call hardening** — All Gemini calls now have a 30-second timeout and explicit `max_output_tokens` caps matched to each prompt's needs, preventing hung requests and reducing generation time
-- **Tuned DB connection pool** — SQLAlchemy engine configured with `pool_size=10, max_overflow=20` for reliable behavior under concurrent user load
+## 🔮 Future Improvements
+- Voice-based interviews (Speech-to-Text / Text-to-Speech)
+- AI interview analytics and deep insights
+- Live collaborative peer interviews
+- Multi-language support for diverse coding challenges
+- Advanced interviewer personas (e.g., "Strict Technical Lead", "Helpful Mentor")
 
 ---
 
-
-## License
-
+## 📄 License
 This project is developed for educational and learning purposes.
