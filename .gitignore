@@ -5,13 +5,16 @@
 backend/.env
 frontend/.env.local
 
-# Python
+# Python & Database
 __pycache__/
 *.py[cod]
 *.egg-info/
 .venv/
 dist/
 .pytest_cache/
+*.db
+*.sqlite
+*.sqlite3
 
 # Node
 node_modules/
@@ -19,7 +22,8 @@ node_modules/
 out/
 
 # Uploads (user resumes)
-backend/uploads/
+backend/uploads/*
+!backend/uploads/.gitkeep
 
 # ChromaDB local data
 backend/chroma_data/
