@@ -117,6 +117,7 @@ export default function SessionPage() {
     isComplete,
     paperId,
     startTime,
+    setSavedAttemptId,
   } = useInterviewStore();
 
   const [theoryAnswer, setTheoryAnswer] = useState("");
@@ -142,7 +143,7 @@ export default function SessionPage() {
 
   useEffect(() => {
     if (isComplete) {
-      router.push("/dashboard");
+      router.push("/summary");
     }
   }, [isComplete, router]);
 
@@ -317,18 +318,23 @@ export default function SessionPage() {
 
         const elapsed = useInterviewStore.getState().getElapsedSeconds();
 
-        await api.post("/questions/attempts/save", {
+        const { data } = await api.post("/questions/attempts/save", {
           category,
           mode,
           coding_score: codingScore,
           theory_score: theoryScore,
           time_taken: elapsed,
         });
+
+        if (data?.attempt_id) {
+          setSavedAttemptId(data.attempt_id);
+        }
       } catch (e) {
         console.error("Failed to save attempt:", e);
       }
 
       completeInterview();
+      router.push("/summary");
     } else {
       setTheoryAnswer("");
       setCodeAnswer(DEFAULT_CODE);
