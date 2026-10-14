@@ -59,7 +59,7 @@ export function Wordmark({ className }: { className?: string }) {
 }
 
 export default function Logo({
-  href = "/",
+  href = "/home",
   className,
   showWordmark = true,
 }: {
