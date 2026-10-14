@@ -7,3 +7,4 @@ export default function SummaryLayout({
 }) {
   return <Suspense>{children}</Suspense>;
 }
+
