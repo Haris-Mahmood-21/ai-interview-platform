@@ -74,10 +74,10 @@ frontend/src/
 │   │   └── summary/             # Post-interview debrief & detailed rubric feedback
 │   ├── (dashboard)/
 │   │   ├── dashboard/           # Metrics, ScoreTrendChart, DomainRadar, Session logs
-│   │   └── sessions/[id]/       # Past attempt detail view
+│   ├── home/                    # Presentation landing page (/home)
 │   ├── globals.css              # Midnight-navy tokens and utility classes
 │   ├── layout.tsx               # Root layout (Plus Jakarta Sans, Sora, JetBrains Mono)
-│   └── page.tsx                 # Presentation landing page
+│   └── page.tsx                 # Root entrypoint with redirect (/ -> /home)
 ├── components/
 │   ├── auth/                    # AuthLayout, IconField
 │   ├── brand/                   # Logo, LogoMark
