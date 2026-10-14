@@ -4,12 +4,12 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { ArrowRight, CircleAlert, Lock, Mail } from "lucide-react";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import AuthLayout, { AuthSpinner } from "@/components/auth/AuthLayout";
+import IconField from "@/components/auth/IconField";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -78,110 +78,88 @@ export default function LoginPage() {
 
   // Wait for hydration + mount
   if (!_hasHydrated || !mounted) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
+    return <AuthSpinner />;
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
-      <motion.div
-        className="w-full max-w-md"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-      >
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary mb-4">
-            <span className="text-primary-foreground text-xl font-bold">AI</span>
-          </div>
-
-          <h1 className="text-2xl font-bold text-foreground">
-            Welcome back
-          </h1>
-
-          <p className="text-muted-foreground mt-1 text-sm">
-            Sign in to your account
-          </p>
-        </div>
-
-        <Card className="rounded-2xl">
-          <CardContent className="p-8">
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <AnimatePresence>
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="bg-danger/10 border border-danger/20 text-danger text-sm rounded-lg px-4 py-3">
-                      {error}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={form.email}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      email: e.target.value,
-                    })
-                  }
-                  placeholder="you@example.com"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={form.password}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      password: e.target.value,
-                    })
-                  }
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
-
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full"
-                size="lg"
+    <AuthLayout
+      title="Welcome back"
+      subtitle="Sign in to continue your interview preparation."
+    >
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <AnimatePresence>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div
+                role="alert"
+                className="flex items-center gap-2 rounded-xl border border-danger/25 bg-danger/10 px-4 py-3 text-sm text-danger"
               >
-                {loading ? "Signing in..." : "Sign in"}
-              </Button>
+                <CircleAlert className="size-4 shrink-0" />
+                {error}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-              <p className="text-center text-sm text-muted-foreground">
-                Don&apos;t have an account?{" "}
-                <Link
-                  href="/register"
-                  className="text-primary hover:text-primary/80 transition-colors"
-                >
-                  Create one
-                </Link>
-              </p>
-            </form>
-          </CardContent>
-        </Card>
-      </motion.div>
-    </div>
+        <IconField
+          id="email"
+          label="Email"
+          icon={Mail}
+          type="email"
+          autoComplete="email"
+          value={form.email}
+          onChange={(e) => setForm({ ...form, email: e.target.value })}
+          placeholder="you@example.com"
+          required
+        />
+
+        <IconField
+          id="password"
+          label="Password"
+          icon={Lock}
+          type="password"
+          autoComplete="current-password"
+          value={form.password}
+          onChange={(e) => setForm({ ...form, password: e.target.value })}
+          placeholder="••••••••"
+          required
+        />
+
+        <Button
+          type="submit"
+          variant="gradient"
+          size="xl"
+          disabled={loading}
+          className="w-full"
+        >
+          {loading ? (
+            <>
+              <span className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              Signing in…
+            </>
+          ) : (
+            <>
+              Sign in <ArrowRight />
+            </>
+          )}
+        </Button>
+
+        <p className="text-center text-sm text-muted-foreground">
+          Don&apos;t have an account?{" "}
+          <Link
+            href="/register"
+            className="font-medium text-primary transition-colors hover:text-primary/80"
+          >
+            Create one
+          </Link>
+        </p>
+      </form>
+    </AuthLayout>
   );
 }

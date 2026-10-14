@@ -4,14 +4,15 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import Navbar from "@/components/layout/Navbar";
-import MetricCards from "@/components/dashboard/MetricCards";
+import { Activity, Plus, Trophy, Layers, Target, Sparkles, ArrowRight } from "lucide-react";
+import AppShell, { PageHeader } from "@/components/layout/AppShell";
+import MetricCards, { type Metric } from "@/components/dashboard/MetricCards";
 import ScoreTrendChart from "@/components/dashboard/ScoreTrendChart";
+import DomainRadar from "@/components/dashboard/DomainRadar";
 import DomainStatsTable from "@/components/dashboard/DomainStatsTable";
 import SessionHistoryTable from "@/components/dashboard/SessionHistoryTable";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 interface DashboardData {
@@ -21,6 +22,42 @@ interface DashboardData {
   recent_attempts: any[];
   domain_stats: any[];
   score_trend: any[];
+}
+
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 18) return "Good afternoon";
+  return "Good evening";
+}
+
+function Panel({
+  title,
+  subtitle,
+  children,
+  className = "",
+  delay = 0,
+}: {
+  title: string;
+  subtitle?: string;
+  children: React.ReactNode;
+  className?: string;
+  delay?: number;
+}) {
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay }}
+      className={`glass rounded-2xl p-5 sm:p-6 ${className}`}
+    >
+      <div className="mb-5">
+        <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+        {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
+      </div>
+      {children}
+    </motion.section>
+  );
 }
 
 export default function DashboardPage() {
@@ -55,111 +92,136 @@ export default function DashboardPage() {
 
   if (!mounted || loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <div className="max-w-5xl mx-auto px-4 py-10 space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="h-8 w-48 bg-secondary rounded-lg animate-pulse" />
-            <div className="h-10 w-36 bg-secondary rounded-xl animate-pulse" />
+      <AppShell>
+        <div className="space-y-6">
+          <div className="flex items-end justify-between">
+            <div className="space-y-3">
+              <div className="h-4 w-32 animate-pulse rounded bg-white/5" />
+              <div className="h-9 w-72 animate-pulse rounded-lg bg-white/5" />
+            </div>
+            <div className="h-12 w-44 animate-pulse rounded-xl bg-white/5" />
           </div>
-          <div className="grid grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-28 bg-card ring-1 ring-foreground/10 rounded-xl animate-pulse" />
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="glass h-32 animate-pulse rounded-2xl" />
             ))}
           </div>
-          <div className="h-64 bg-card ring-1 ring-foreground/10 rounded-2xl animate-pulse" />
-          <div className="h-48 bg-card ring-1 ring-foreground/10 rounded-2xl animate-pulse" />
+          <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
+            <div className="glass h-80 animate-pulse rounded-2xl" />
+            <div className="glass h-80 animate-pulse rounded-2xl" />
+          </div>
+          <div className="glass h-64 animate-pulse rounded-2xl" />
         </div>
-      </div>
+      </AppShell>
     );
   }
 
-  const metrics = [
+  const firstName = user?.name?.split(" ")[0];
+  const sessions = data?.total_sessions ?? 0;
+
+  const metrics: Metric[] = [
     {
-      label: "Total Sessions",
-      value: data?.total_sessions ?? 0,
+      label: "Sessions",
+      value: sessions,
       sub: "interviews completed",
+      icon: Activity,
+      tile: "from-violet-500 to-indigo-500",
     },
     {
-      label: "Average Score",
-      value: data?.avg_score ? `${data.avg_score}%` : "—",
+      label: "Average",
+      value: data?.avg_score ? Math.round(data.avg_score) : null,
+      suffix: "%",
       sub: "across all sessions",
-      color:
-        (data?.avg_score ?? 0) >= 80
-          ? "text-success"
-          : (data?.avg_score ?? 0) >= 60
-          ? "text-warning"
-          : "text-foreground",
+      icon: Target,
+      tile: "from-sky-400 to-cyan-500",
     },
     {
-      label: "Best Score",
-      value: data?.best_score ? `${data.best_score}%` : "—",
+      label: "Best",
+      value: data?.best_score ? Math.round(data.best_score) : null,
+      suffix: "%",
       sub: "personal best",
-      color: "text-primary",
+      icon: Trophy,
+      tile: "from-amber-400 to-orange-500",
+    },
+    {
+      label: "Domains",
+      value: data?.domain_stats?.length ?? 0,
+      suffix: "/4",
+      sub: "domains practised",
+      icon: Layers,
+      tile: "from-emerald-400 to-teal-500",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <motion.div
-        className="max-w-5xl mx-auto px-4 py-10 space-y-8"
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
-      >
-
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">
-              {user?.name ? `${user.name}'s Dashboard` : "Dashboard"}
-            </h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              Track your interview performance over time
-            </p>
-          </div>
-          <Button asChild>
+    <AppShell>
+      <PageHeader
+        eyebrow={greeting()}
+        title={
+          <>
+            Welcome back{firstName ? ", " : ""}
+            {firstName && <span className="text-gradient">{firstName}</span>}
+          </>
+        }
+        description="Track your interview performance and keep improving."
+        action={
+          <Button variant="gradient" size="xl" asChild>
             <Link href="/config">
-              New Interview →
+              <Plus /> New interview
             </Link>
           </Button>
-        </div>
+        }
+      />
 
-        {/* Metric cards */}
+      <div className="space-y-6">
+        {/* First-run banner */}
+        {sessions === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative overflow-hidden rounded-2xl border border-primary/25 p-6"
+          >
+            <div className="bg-brand-gradient absolute inset-0 opacity-[0.12]" />
+            <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-4">
+                <span className="bg-brand-gradient grid size-12 place-items-center rounded-2xl">
+                  <Sparkles className="size-5 text-white" />
+                </span>
+                <div>
+                  <p className="font-display text-lg font-semibold">Start your first interview</p>
+                  <p className="text-sm text-muted-foreground">
+                    Choose a domain or upload your resume. It takes less than a minute to set up.
+                  </p>
+                </div>
+              </div>
+              <Button variant="outline" asChild className="border-white/15 bg-white/5">
+                <Link href="/config">
+                  Get started <ArrowRight />
+                </Link>
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
         <MetricCards metrics={metrics} />
 
-        {/* Score trend */}
-        <Card className="rounded-2xl">
-          <CardContent className="p-6">
-            <h2 className="text-sm font-medium text-foreground mb-5">
-              Score Trend
-            </h2>
+        <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
+          <Panel title="Score trend" subtitle="Your total score per session" delay={0.1}>
             <ScoreTrendChart data={data?.score_trend ?? []} />
-          </CardContent>
-        </Card>
+          </Panel>
+          <Panel title="Skill radar" subtitle="Average vs best by domain" delay={0.15}>
+            <DomainRadar stats={data?.domain_stats ?? []} />
+          </Panel>
+        </div>
 
-        {/* Domain stats */}
-        <Card className="rounded-2xl">
-          <CardContent className="p-6">
-            <h2 className="text-sm font-medium text-foreground mb-5">
-              Performance by Domain
-            </h2>
-            <DomainStatsTable stats={data?.domain_stats ?? []} />
-          </CardContent>
-        </Card>
+        <Panel title="Performance by domain" delay={0.2}>
+          <DomainStatsTable stats={data?.domain_stats ?? []} />
+        </Panel>
 
-        {/* Session history */}
-        <Card className="rounded-2xl">
-          <CardContent className="p-6">
-            <h2 className="text-sm font-medium text-foreground mb-5">
-              Session History
-            </h2>
-            <SessionHistoryTable attempts={data?.recent_attempts ?? []} />
-          </CardContent>
-        </Card>
-
-      </motion.div>
-    </div>
+        <Panel title="Session history" subtitle="Click a session to see the breakdown" delay={0.25}>
+          <SessionHistoryTable attempts={data?.recent_attempts ?? []} />
+        </Panel>
+      </div>
+    </AppShell>
   );
 }

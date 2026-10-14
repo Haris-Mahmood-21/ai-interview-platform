@@ -3,85 +3,99 @@
 
 /*
  * Design System — AI Interview Platform
- * Dark-only theme using the existing gray-950/900/800 + indigo-600 palette,
- * now tokenized via CSS variables so shadcn components and custom UI
- * share one source of truth.
+ * ------------------------------------------------------------
+ * Dark-only "AI product" theme: deep midnight-navy surfaces, a
+ * violet → indigo → cyan brand gradient, and glass-style cards.
  *
  * Color format: oklch values for Tailwind v4 compatibility.
- * Semantic tokens (success/warning/danger) map to the green/yellow/red
- * already used in difficulty badges and correct/incorrect states.
+ * Semantic tokens (success/warning/danger) drive score colouring,
+ * difficulty badges and pass/fail states across the app.
  */
 
 :root {
+  color-scheme: dark;
+
   /* ── Core ─────────────────────────────────────────────── */
-  --background: oklch(0.145 0.000 0);        /* gray-950 (#0a0a0a) */
-  --foreground: oklch(0.985 0.000 0);        /* gray-50  (#fafafa)  */
+  --background: oklch(0.13 0.025 272);       /* midnight navy */
+  --foreground: oklch(0.97 0.005 270);
 
   /* ── Cards & surfaces ─────────────────────────────────── */
-  --card: oklch(0.205 0.006 286);            /* gray-900 (#111827) */
-  --card-foreground: oklch(0.985 0.000 0);   /* gray-50  */
+  --card: oklch(0.18 0.028 272);
+  --card-foreground: oklch(0.97 0.005 270);
+  --surface-2: oklch(0.22 0.03 272);
 
   /* ── Popover/dialog overlays ──────────────────────────── */
-  --popover: oklch(0.205 0.006 286);         /* same as card */
-  --popover-foreground: oklch(0.985 0.000 0);
+  --popover: oklch(0.18 0.028 272);
+  --popover-foreground: oklch(0.97 0.005 270);
 
-  /* ── Primary action (indigo-600) ──────────────────────── */
-  --primary: oklch(0.541 0.190 275);         /* indigo-600 (#4f46e5) */
-  --primary-foreground: oklch(0.985 0.000 0);/* white */
+  /* ── Brand ────────────────────────────────────────────── */
+  --primary: oklch(0.62 0.2 280);            /* indigo-violet */
+  --primary-foreground: oklch(0.99 0 0);
+  --brand-violet: oklch(0.66 0.24 300);
+  --brand-indigo: oklch(0.6 0.21 275);
+  --brand-cyan: oklch(0.8 0.14 210);
 
-  /* ── Secondary (gray-800) ─────────────────────────────── */
-  --secondary: oklch(0.269 0.006 286);       /* gray-800 (#1f2937) */
-  --secondary-foreground: oklch(0.870 0.000 0);/* gray-300 */
+  /* ── Secondary ────────────────────────────────────────── */
+  --secondary: oklch(0.24 0.03 272);
+  --secondary-foreground: oklch(0.88 0.01 270);
 
   /* ── Muted (subdued text & backgrounds) ───────────────── */
-  --muted: oklch(0.269 0.006 286);           /* gray-800 */
-  --muted-foreground: oklch(0.708 0.000 0);  /* gray-400 (#9ca3af) */
+  --muted: oklch(0.24 0.03 272);
+  --muted-foreground: oklch(0.7 0.025 270);
 
   /* ── Accents (hover states) ───────────────────────────── */
-  --accent: oklch(0.269 0.006 286);          /* gray-800 */
-  --accent-foreground: oklch(0.985 0.000 0);
+  --accent: oklch(0.27 0.04 275);
+  --accent-foreground: oklch(0.97 0.005 270);
 
   /* ── Borders & inputs ─────────────────────────────────── */
-  --border: oklch(0.350 0.006 286);          /* gray-700 (#374151) */
-  --input: oklch(0.350 0.006 286);           /* gray-700 */
-  --ring: oklch(0.541 0.190 275);            /* indigo-600 (focus ring) */
+  --border: oklch(1 0 0 / 0.09);
+  --input: oklch(1 0 0 / 0.12);
+  --ring: oklch(0.66 0.2 285);
 
   /* ── Destructive (errors) ─────────────────────────────── */
-  --destructive: oklch(0.577 0.245 27.325);  /* red-500 */
+  --destructive: oklch(0.64 0.22 25);
 
   /* ── Radius ───────────────────────────────────────────── */
-  --radius: 0.625rem;                        /* 10px — rounded-lg feel */
+  --radius: 0.75rem;
 
   /* ── Semantic status colors ───────────────────────────── */
-  --success: oklch(0.723 0.191 149.58);      /* green-400 */
-  --success-foreground: oklch(0.145 0.000 0);
-  --warning: oklch(0.852 0.199 91.94);       /* yellow-400 */
-  --warning-foreground: oklch(0.145 0.000 0);
-  --danger: oklch(0.704 0.191 22.22);        /* red-400 */
-  --danger-foreground: oklch(0.985 0.000 0);
+  --success: oklch(0.76 0.17 158);
+  --success-foreground: oklch(0.15 0 0);
+  --warning: oklch(0.83 0.16 80);
+  --warning-foreground: oklch(0.15 0 0);
+  --danger: oklch(0.7 0.19 22);
+  --danger-foreground: oklch(0.99 0 0);
 
   /* ── Chart colors ─────────────────────────────────────── */
-  --chart-1: oklch(0.541 0.190 275);         /* indigo-600 */
-  --chart-2: oklch(0.723 0.191 149.58);      /* green-400 */
-  --chart-3: oklch(0.852 0.199 91.94);       /* yellow-400 */
-  --chart-4: oklch(0.704 0.191 22.22);       /* red-400 */
-  --chart-5: oklch(0.650 0.200 250);         /* blue-400 */
+  --chart-1: oklch(0.66 0.22 285);
+  --chart-2: oklch(0.8 0.14 210);
+  --chart-3: oklch(0.76 0.17 158);
+  --chart-4: oklch(0.83 0.16 80);
+  --chart-5: oklch(0.7 0.19 22);
 
   /* ── Sidebar (inherits card) ──────────────────────────── */
-  --sidebar: oklch(0.205 0.006 286);
-  --sidebar-foreground: oklch(0.985 0.000 0);
-  --sidebar-primary: oklch(0.541 0.190 275);
-  --sidebar-primary-foreground: oklch(0.985 0.000 0);
-  --sidebar-accent: oklch(0.269 0.006 286);
-  --sidebar-accent-foreground: oklch(0.985 0.000 0);
-  --sidebar-border: oklch(0.350 0.006 286);
-  --sidebar-ring: oklch(0.541 0.190 275);
+  --sidebar: oklch(0.18 0.028 272);
+  --sidebar-foreground: oklch(0.97 0.005 270);
+  --sidebar-primary: oklch(0.62 0.2 280);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.24 0.03 272);
+  --sidebar-accent-foreground: oklch(0.97 0.005 270);
+  --sidebar-border: oklch(1 0 0 / 0.09);
+  --sidebar-ring: oklch(0.66 0.2 285);
+
+  /* ── Gradient interpolation (progressive enhancement) ─── */
+  --in-oklch: ;
+}
+
+@supports (background: linear-gradient(in oklch, white, black)) {
+  :root {
+    --in-oklch: in oklch;
+  }
 }
 
 /*
  * Wire CSS variables into Tailwind v4's @theme system so they are
  * available as utility classes (bg-card, text-muted-foreground, etc.).
- * Also register the font families and spacing scale.
  */
 @theme inline {
   /* Colors */
@@ -89,6 +103,7 @@
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
+  --color-surface-2: var(--surface-2);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
@@ -103,6 +118,11 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-destructive: var(--destructive);
+
+  /* Brand */
+  --color-brand-violet: var(--brand-violet);
+  --color-brand-indigo: var(--brand-indigo);
+  --color-brand-cyan: var(--brand-cyan);
 
   /* Semantic status */
   --color-success: var(--success);
@@ -130,20 +150,46 @@
   --color-sidebar-ring: var(--sidebar-ring);
 
   /* Fonts */
-  --font-sans: var(--font-inter);
-  --font-mono: var(--font-jetbrains-mono);
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-sora), var(--font-jakarta), ui-sans-serif, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
 
   /* Radius */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+
+  /* Animations */
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-shimmer: shimmer 2.2s linear infinite;
+  --animate-pulse-ring: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-gradient-pan: gradient-pan 8s ease infinite;
 }
 
 /* ── Base styles ──────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
+  font-feature-settings: "ss01", "cv11";
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+::selection {
+  background: oklch(0.62 0.2 280 / 0.45);
+  color: white;
 }
 
 /*
@@ -156,4 +202,131 @@ body {
 ::backdrop,
 ::file-selector-button {
   border-color: var(--border);
+}
+
+/* Slim, theme-matching scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: oklch(1 0 0 / 0.15) transparent;
+}
+
+/* ── Utilities ────────────────────────────────────────────── */
+
+/* Brand gradient text */
+@utility text-gradient {
+  background-image: linear-gradient(
+    100deg var(--in-oklch),
+    var(--brand-violet),
+    var(--brand-indigo) 45%,
+    var(--brand-cyan)
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+/* Brand gradient fill */
+@utility bg-brand-gradient {
+  background-image: linear-gradient(
+    120deg var(--in-oklch),
+    var(--brand-violet),
+    var(--brand-indigo) 50%,
+    var(--brand-cyan)
+  );
+}
+
+/* Glass surface: translucent card with subtle blur and inner highlight */
+@utility glass {
+  background-color: oklch(0.19 0.03 272 / 0.62);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid oklch(1 0 0 / 0.08);
+  box-shadow:
+    inset 0 1px 0 0 oklch(1 0 0 / 0.05),
+    0 1px 2px oklch(0 0 0 / 0.25),
+    0 8px 24px -8px oklch(0 0 0 / 0.45);
+}
+
+/* Gradient hairline border (uses padding-box/border-box trick) */
+@utility gradient-border {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--card), var(--card)) padding-box,
+    linear-gradient(
+        135deg var(--in-oklch),
+        oklch(0.66 0.24 300 / 0.7),
+        oklch(1 0 0 / 0.06) 40%,
+        oklch(1 0 0 / 0.06) 60%,
+        oklch(0.8 0.14 210 / 0.6)
+      )
+      border-box;
+}
+
+/* Soft brand glow */
+@utility glow {
+  box-shadow:
+    0 0 0 1px oklch(0.62 0.2 280 / 0.35),
+    0 10px 40px -10px oklch(0.62 0.2 280 / 0.6);
+}
+
+/* Faint grid backdrop */
+@utility bg-grid {
+  background-image:
+    linear-gradient(oklch(1 0 0 / 0.04) 1px, transparent 0),
+    linear-gradient(90deg, oklch(1 0 0 / 0.04) 1px, transparent 0);
+  background-size: 44px 44px;
+}
+
+/* ── Keyframes ────────────────────────────────────────────── */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.7;
+  }
+  80%,
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+@keyframes gradient-pan {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

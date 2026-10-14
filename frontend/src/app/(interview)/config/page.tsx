@@ -2,53 +2,42 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Navbar from "@/components/layout/Navbar";
+import AppShell, { PageHeader } from "@/components/layout/AppShell";
+import AIThinking from "@/components/interview/AIThinking";
 import api from "@/lib/api";
 import { useInterviewStore } from "@/store/interviewStore";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  ArrowRight,
+  Check,
+  CircleAlert,
+  CloudUpload,
+  FileText,
+  Library,
+  RotateCcw,
+  Sparkles,
+  WandSparkles,
+  X,
+} from "lucide-react";
+import { DOMAINS, getDomain } from "@/lib/domains";
+import { cn } from "@/lib/utils";
 
-const CATEGORIES = [
-  {
-    id: "dsa",
-    label: "Data Structures & Algorithms",
-    icon: "🧠",
-    desc: "Arrays, trees, graphs, sorting, DP",
-  },
-  {
-    id: "oop",
-    label: "Object-Oriented Programming",
-    icon: "🧩",
-    desc: "Classes, inheritance, SOLID, design patterns",
-  },
-  {
-    id: "ml",
-    label: "Machine Learning",
-    icon: "🤖",
-    desc: "Supervised learning, neural networks, evaluation",
-  },
-  {
-    id: "react",
-    label: "React & Frontend",
-    icon: "⚛️",
-    desc: "Hooks, state management, Next.js, performance",
-  },
-];
+const CATEGORIES = DOMAINS;
 
 const MODES = [
   {
     id: "general",
     label: "General Mode",
     desc: "Questions from our curated question bank",
-    icon: "📚",
+    icon: Library,
   },
   {
     id: "resume",
     label: "Resume Mode",
-    desc: "Personalized questions based on your CV",
-    icon: "📄",
+    desc: "Personalised questions based on your CV",
+    icon: FileText,
+    badge: "AI",
   },
 ];
 
@@ -100,6 +89,60 @@ function detectDomainFromSkills(skills: string[]): string | null {
   return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
 }
 
+function SectionTitle({ step, title, hint }: { step: number; title: string; hint?: React.ReactNode }) {
+  return (
+    <div className="mb-4 flex items-center justify-between gap-3">
+      <div className="flex items-center gap-3">
+        <span className="bg-brand-gradient grid size-7 place-items-center rounded-full text-xs font-bold text-white">
+          {step}
+        </span>
+        <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+      </div>
+      {hint}
+    </div>
+  );
+}
+
+function SelectCard({
+  selected,
+  onClick,
+  children,
+  className,
+}: {
+  selected: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={selected}
+      className={cn(
+        "group relative w-full rounded-2xl border p-5 text-left transition-all duration-200",
+        "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30",
+        selected
+          ? "border-primary/60 bg-primary/[0.09] shadow-[0_0_0_1px_var(--primary),0_12px_40px_-12px_var(--primary)]"
+          : "border-white/[0.07] bg-white/[0.02] hover:-translate-y-0.5 hover:border-white/15 hover:bg-white/[0.04]",
+        className
+      )}
+    >
+      <span
+        className={cn(
+          "absolute right-4 top-4 grid size-5 place-items-center rounded-full border transition-all",
+          selected
+            ? "border-transparent bg-primary text-white"
+            : "border-white/15 text-transparent"
+        )}
+      >
+        <Check className="size-3" strokeWidth={3} />
+      </span>
+      {children}
+    </button>
+  );
+}
+
 export default function ConfigPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -113,6 +156,8 @@ export default function ConfigPage() {
   const [uploadDone, setUploadDone] = useState(false);
   const [uploadedSkills, setUploadedSkills] = useState<string[]>([]);
   const [autoDetected, setAutoDetected] = useState(false);
+  const [fileName, setFileName] = useState("");
+  const [dragging, setDragging] = useState(false);
 
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -124,13 +169,15 @@ export default function ConfigPage() {
     }
   }, [searchParams]);
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-
-    if (!file) return;
+  const uploadFile = async (file: File) => {
+    if (file.type && file.type !== "application/pdf") {
+      setError("Please upload a PDF file.");
+      return;
+    }
 
     setUploading(true);
     setError("");
+    setFileName(file.name);
 
     try {
       const form = new FormData();
@@ -155,8 +202,32 @@ export default function ConfigPage() {
       }
     } catch {
       setError("Failed to upload resume. Please try again.");
+      setFileName("");
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) uploadFile(file);
+    e.target.value = "";
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) uploadFile(file);
+  };
+
+  const resetUpload = () => {
+    setUploadDone(false);
+    setUploadedSkills([]);
+    setFileName("");
+    if (autoDetected) {
+      setCategory("");
+      setAutoDetected(false);
     }
   };
 
@@ -187,310 +258,412 @@ export default function ConfigPage() {
         err.response?.data?.detail ||
           "Failed to generate interview. Please try again."
       );
-    } finally {
       setLoading(false);
     }
   };
 
+  const canStart =
+    !loading &&
+    !(mode === "general" && !category) &&
+    !(mode === "resume" && !uploadDone);
+
+  const selectedDomain = category ? getDomain(category) : null;
+  const selectedMode = MODES.find((m) => m.id === mode)!;
+
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <AppShell>
+      <PageHeader
+        eyebrow="New interview"
+        title="Configure your interview"
+        description="Pick an interview mode and a domain. The AI will generate a mixed set of theory and coding questions for you."
+      />
 
-      <motion.div 
-        className="max-w-3xl mx-auto px-4 py-12"
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
-      >
-        <div className="mb-10">
-          <h1 className="text-2xl font-bold text-foreground">
-            Configure your interview
-          </h1>
-
-          <p className="text-muted-foreground mt-1 text-sm">
-            Choose your domain and interview mode to get started
-          </p>
-        </div>
-
-        <div className="mb-8">
-          <h2 className="text-sm font-medium text-secondary-foreground mb-3 uppercase tracking-wide">
-            Interview Mode
-          </h2>
-
-          <div className="grid grid-cols-2 gap-3">
-            {MODES.map((m) => {
-              const isSelected = mode === m.id;
-              return (
-                <Card
+      <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
+        {/* ── LEFT: steps ── */}
+        <div className="space-y-10">
+          {/* Step 1: Mode */}
+          <section>
+            <SectionTitle step={1} title="Interview mode" />
+            <div className="grid gap-4 sm:grid-cols-2">
+              {MODES.map((m) => (
+                <SelectCard
                   key={m.id}
+                  selected={mode === m.id}
                   onClick={() => {
                     setMode(m.id);
-
-                    if (m.id === "general") {
-                      setAutoDetected(false);
-                    }
+                    if (m.id === "general") setAutoDetected(false);
                   }}
-                  className={`cursor-pointer transition-all hover:scale-[1.02] active:scale-100 ${
-                    isSelected
-                      ? "border-primary bg-primary/10 ring-1 ring-primary/20"
-                      : "border-border bg-card hover:border-border"
-                  }`}
                 >
-                  <CardContent className="p-4">
-                    <div className="text-2xl mb-2">{m.icon}</div>
-                    <div className="text-sm font-medium text-foreground">{m.label}</div>
-                    <div className="text-xs text-muted-foreground mt-1">{m.desc}</div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
+                  <span
+                    className={cn(
+                      "mb-4 grid size-11 place-items-center rounded-xl transition-colors",
+                      mode === m.id ? "bg-brand-gradient text-white" : "bg-white/5 text-muted-foreground"
+                    )}
+                  >
+                    <m.icon className="size-5" />
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <span className="font-display text-base font-semibold text-foreground">
+                      {m.label}
+                    </span>
+                    {m.badge && (
+                      <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-primary">
+                        {m.badge}
+                      </span>
+                    )}
+                  </span>
+                  <span className="mt-1 block text-sm text-muted-foreground">{m.desc}</span>
+                </SelectCard>
+              ))}
+            </div>
+          </section>
 
-        <AnimatePresence mode="wait">
-          {mode === "resume" && (
-            <motion.div 
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mb-8 overflow-hidden"
-            >
-              <h2 className="text-sm font-medium text-secondary-foreground mb-3 uppercase tracking-wide">
-                Upload Resume
-              </h2>
-
-              <motion.div
-                layout
-                onClick={() => fileRef.current?.click()}
-                className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
-                  uploadDone
-                    ? "border-success bg-success/10"
-                    : "border-input bg-card hover:border-muted-foreground"
-                }`}
+          {/* Resume upload */}
+          <AnimatePresence initial={false}>
+            {mode === "resume" && (
+              <motion.section
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
               >
+                <SectionTitle step={2} title="Upload your resume" />
+
                 <input
                   ref={fileRef}
                   type="file"
-                  accept=".pdf"
+                  accept=".pdf,application/pdf"
                   className="hidden"
                   onChange={handleUpload}
                 />
 
-                <AnimatePresence mode="wait">
-                  {uploading ? (
-                    <motion.div 
-                      key="uploading"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="flex items-center justify-center gap-2"
-                    >
-                      <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                      <p className="text-muted-foreground text-sm">Parsing resume...</p>
-                    </motion.div>
-                  ) : uploadDone ? (
-                    <motion.div
-                      key="done"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                    >
-                      <p className="text-success text-sm font-medium mb-3">
-                        ✓ Resume uploaded successfully
-                      </p>
-
-                      {uploadedSkills.length > 0 && (
-                        <div>
-                          <p className="text-muted-foreground text-xs mb-2">
-                            Detected {uploadedSkills.length} skills:
-                          </p>
-
-                          <div className="flex flex-wrap gap-1.5 justify-center">
-                            {uploadedSkills.slice(0, 14).map((s) => (
-                              <Badge
-                                key={s}
-                                variant="secondary"
-                                className="text-xs font-mono"
-                              >
-                                {s}
-                              </Badge>
-                            ))}
-                          </div>
+                {!uploadDone ? (
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => !uploading && fileRef.current?.click()}
+                    onKeyDown={(e) => {
+                      if ((e.key === "Enter" || e.key === " ") && !uploading) {
+                        e.preventDefault();
+                        fileRef.current?.click();
+                      }
+                    }}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setDragging(true);
+                    }}
+                    onDragLeave={() => setDragging(false)}
+                    onDrop={handleDrop}
+                    className={cn(
+                      "relative flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-12 text-center transition-all",
+                      "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30",
+                      dragging
+                        ? "border-primary bg-primary/10"
+                        : "border-white/12 bg-white/[0.02] hover:border-primary/50 hover:bg-white/[0.04]"
+                    )}
+                  >
+                    {uploading ? (
+                      <>
+                        <div className="relative mb-4 grid size-14 place-items-center">
+                          <span className="absolute inset-0 animate-pulse-ring rounded-full bg-primary/40" />
+                          <span className="bg-brand-gradient relative grid size-14 place-items-center rounded-full">
+                            <WandSparkles className="size-6 text-white" />
+                          </span>
                         </div>
-                      )}
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="idle"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                    >
-                      <p className="text-muted-foreground text-sm">
-                        Drop your PDF resume here or click to browse
-                      </p>
+                        <p className="font-medium text-foreground">Analysing {fileName}…</p>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          Extracting skills and projects with AI
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <span className="mb-4 grid size-14 place-items-center rounded-2xl bg-white/5">
+                          <CloudUpload className="size-6 text-primary" />
+                        </span>
+                        <p className="font-medium text-foreground">
+                          Drop your resume here or{" "}
+                          <span className="text-primary underline underline-offset-4">browse</span>
+                        </p>
+                        <p className="mt-1 text-sm text-muted-foreground">PDF only · max 5 MB</p>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="rounded-2xl border border-success/25 bg-success/[0.06] p-5"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="grid size-10 place-items-center rounded-xl bg-success/15">
+                        <FileText className="size-5 text-success" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-foreground">
+                          {fileName || "Resume uploaded"}
+                        </p>
+                        <p className="text-xs text-success">
+                          Parsed successfully · {uploadedSkills.length} skills detected
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={resetUpload}
+                        className="text-muted-foreground"
+                      >
+                        <RotateCcw /> Replace
+                      </Button>
+                    </div>
 
-                      <p className="text-muted-foreground text-xs mt-1">
-                        Max 5MB · PDF only
-                      </p>
+                    {uploadedSkills.length > 0 && (
+                      <div className="mt-4 flex flex-wrap gap-1.5">
+                        {uploadedSkills.slice(0, 18).map((s, i) => (
+                          <motion.span
+                            key={s}
+                            initial={{ opacity: 0, y: 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.03 }}
+                            className="rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1 font-mono text-xs text-secondary-foreground"
+                          >
+                            {s}
+                          </motion.span>
+                        ))}
+                        {uploadedSkills.length > 18 && (
+                          <span className="px-2 py-1 text-xs text-muted-foreground">
+                            +{uploadedSkills.length - 18} more
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+
+                <AnimatePresence>
+                  {autoDetected && category && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      className="mt-3 flex items-center gap-2 rounded-xl border border-primary/25 bg-primary/10 px-4 py-2.5 text-sm text-primary"
+                    >
+                      <Sparkles className="size-4 shrink-0" />
+                      Domain auto-selected from your resume skills. You can change it below.
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </motion.div>
-
-              {autoDetected && category && (
-                <motion.div 
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-3 flex items-center gap-2 text-xs text-primary bg-primary/10 border border-primary/20 rounded-lg px-3 py-2"
-                >
-                  <span>✨</span>
-                  <span>
-                    Domain auto-selected based on your resume skills. You can
-                    change it below.
-                  </span>
-                </motion.div>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Domain selection */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-medium text-secondary-foreground uppercase tracking-wide">
-              {mode === "resume"
-                ? "Domain Override (optional)"
-                : "Select Domain"}
-            </h2>
-
-            {mode === "resume" && category && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setCategory("");
-                  setAutoDetected(false);
-                }}
-                className="text-xs text-muted-foreground hover:text-danger hover:border-danger/20 h-7"
-              >
-                ✕ Clear selection
-              </Button>
+              </motion.section>
             )}
-          </div>
+          </AnimatePresence>
 
-          <div className="grid grid-cols-2 gap-3">
-            {CATEGORIES.map((cat) => {
-              const isSelected = category === cat.id;
-              return (
-                <Card
+          {/* Domain */}
+          <section>
+            <SectionTitle
+              step={mode === "resume" ? 3 : 2}
+              title={mode === "resume" ? "Domain focus (optional)" : "Choose a domain"}
+              hint={
+                mode === "resume" &&
+                category && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setCategory("");
+                      setAutoDetected(false);
+                    }}
+                    className="text-muted-foreground hover:text-danger"
+                  >
+                    <X /> Clear
+                  </Button>
+                )
+              }
+            />
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              {CATEGORIES.map((cat) => (
+                <SelectCard
                   key={cat.id}
+                  selected={category === cat.id}
                   onClick={() => {
                     if (mode === "resume" && category === cat.id) {
                       setCategory("");
-                      setAutoDetected(false);
                     } else {
                       setCategory(cat.id);
-                      setAutoDetected(false);
                     }
+                    setAutoDetected(false);
                   }}
-                  className={`cursor-pointer transition-all hover:scale-[1.02] active:scale-100 ${
-                    isSelected
-                      ? "border-primary bg-primary/10 ring-1 ring-primary/20"
-                      : "border-border bg-card hover:border-border"
-                  }`}
                 >
-                  <CardContent className="p-4">
-                    <div className="text-2xl mb-2">{cat.icon}</div>
-                    <div className="text-sm font-medium text-foreground">
-                      {cat.label}
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1">{cat.desc}</div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+                  <div className="flex items-start gap-4 pr-6">
+                    <span
+                      className={cn(
+                        "grid size-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br shadow-lg",
+                        cat.tile
+                      )}
+                    >
+                      <cat.icon className="size-6 text-white" />
+                    </span>
+                    <span>
+                      <span className="block font-display text-base font-semibold text-foreground">
+                        {cat.label}
+                      </span>
+                      <span className="mt-1 block text-sm text-muted-foreground">{cat.desc}</span>
+                    </span>
+                  </div>
+                </SelectCard>
+              ))}
+            </div>
 
-          <AnimatePresence>
             {mode === "resume" && (
-              <motion.p 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="text-xs text-muted-foreground mt-2"
-              >
+              <p className="mt-3 text-sm text-muted-foreground">
                 {category
-                  ? "You selected a domain. Gemini will focus questions here."
-                  : "No domain selected — Gemini will pick the best one from your resume."}
-              </motion.p>
+                  ? "You selected a domain. Gemini will focus the questions on it."
+                  : "No domain selected. Gemini will pick the best one from your resume."}
+              </p>
             )}
-          </AnimatePresence>
+          </section>
         </div>
 
-        <AnimatePresence>
-          {error && (
-            <motion.div 
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mb-6 overflow-hidden"
-            >
-              <div className="bg-danger/10 border border-danger/20 text-danger text-sm rounded-lg px-4 py-3">
-                {error}
+        {/* ── RIGHT: summary ── */}
+        <aside className="lg:sticky lg:top-24 lg:self-start">
+          <div className="glass rounded-2xl p-6">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Summary
+            </p>
+
+            <dl className="mt-5 space-y-4">
+              <div className="flex items-center gap-3">
+                <span className="grid size-10 place-items-center rounded-xl bg-white/5">
+                  <selectedMode.icon className="size-5 text-primary" />
+                </span>
+                <div>
+                  <dt className="text-xs text-muted-foreground">Mode</dt>
+                  <dd className="text-sm font-semibold text-foreground">{selectedMode.label}</dd>
+                </div>
               </div>
+
+              <div className="flex items-center gap-3">
+                {selectedDomain ? (
+                  <span
+                    className={cn(
+                      "grid size-10 place-items-center rounded-xl bg-gradient-to-br",
+                      selectedDomain.tile
+                    )}
+                  >
+                    <selectedDomain.icon className="size-5 text-white" />
+                  </span>
+                ) : (
+                  <span className="grid size-10 place-items-center rounded-xl border border-dashed border-white/15 text-muted-foreground">
+                    ?
+                  </span>
+                )}
+                <div>
+                  <dt className="text-xs text-muted-foreground">Domain</dt>
+                  <dd className="text-sm font-semibold text-foreground">
+                    {selectedDomain
+                      ? selectedDomain.label
+                      : mode === "resume"
+                      ? "Auto (from resume)"
+                      : "Not selected"}
+                  </dd>
+                </div>
+              </div>
+
+              {mode === "resume" && (
+                <div className="flex items-center gap-3">
+                  <span
+                    className={cn(
+                      "grid size-10 place-items-center rounded-xl",
+                      uploadDone ? "bg-success/15 text-success" : "bg-white/5 text-muted-foreground"
+                    )}
+                  >
+                    {uploadDone ? <Check className="size-5" /> : <FileText className="size-5" />}
+                  </span>
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Resume</dt>
+                    <dd className="text-sm font-semibold text-foreground">
+                      {uploadDone ? "Uploaded" : "Required"}
+                    </dd>
+                  </div>
+                </div>
+              )}
+            </dl>
+
+            <div className="my-6 h-px bg-white/[0.06]" />
+
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li className="flex items-center gap-2">
+                <Check className="size-4 text-success" /> Theory + coding questions
+              </li>
+              <li className="flex items-center gap-2">
+                <Check className="size-4 text-success" /> Instant AI feedback
+              </li>
+              <li className="flex items-center gap-2">
+                <Check className="size-4 text-success" /> Adaptive follow-ups
+              </li>
+            </ul>
+
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div
+                    role="alert"
+                    className="mt-5 flex items-start gap-2 rounded-xl border border-danger/25 bg-danger/10 px-3.5 py-3 text-sm text-danger"
+                  >
+                    <CircleAlert className="mt-0.5 size-4 shrink-0" />
+                    {error}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <Button
+              variant="gradient"
+              size="xl"
+              className="mt-6 w-full"
+              onClick={handleStart}
+              disabled={!canStart}
+            >
+              Start interview <ArrowRight />
+            </Button>
+
+            {mode === "resume" && !uploadDone && (
+              <p className="mt-3 text-center text-xs text-muted-foreground">
+                Upload your resume to enable resume mode
+              </p>
+            )}
+            {mode === "general" && !category && (
+              <p className="mt-3 text-center text-xs text-muted-foreground">
+                Select a domain to continue
+              </p>
+            )}
+          </div>
+        </aside>
+      </div>
+
+      {/* Full-screen generation overlay */}
+      <AnimatePresence>
+        {loading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 grid place-items-center bg-background/80 px-4 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 10 }}
+              animate={{ scale: 1, y: 0 }}
+              className="w-full max-w-md"
+            >
+              <AIThinking variant="generate" />
             </motion.div>
-          )}
-        </AnimatePresence>
-
-        <Button
-          size="lg"
-          className="w-full font-medium"
-          onClick={handleStart}
-          disabled={
-            loading ||
-            (mode === "general" && !category) ||
-            (mode === "resume" && !uploadDone)
-          }
-        >
-          {loading ? (
-            <span className="flex items-center justify-center gap-2">
-              <svg
-                className="animate-spin h-4 w-4"
-                viewBox="0 0 24 24"
-                fill="none"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8v8z"
-                />
-              </svg>
-
-              {mode === "resume" && !category
-                ? "Analyzing resume and generating interview..."
-                : "Generating your personalized interview..."}
-            </span>
-          ) : (
-            "Start Interview →"
-          )}
-        </Button>
-
-        {mode === "resume" && !uploadDone && (
-          <p className="text-center text-xs text-muted-foreground mt-3">
-            Upload your resume to enable resume mode
-          </p>
+          </motion.div>
         )}
-      </motion.div>
-    </div>
+      </AnimatePresence>
+    </AppShell>
   );
 }
