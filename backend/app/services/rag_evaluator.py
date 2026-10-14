@@ -112,7 +112,11 @@ def evaluate_theory_answer(
     prompt = build_evaluation_prompt(question, user_answer, context_chunks)
 
     # Step 3: Call Gemini
-    raw_response = call_gemini(prompt, max_output_tokens=2048)
+    raw_response = call_gemini(
+        prompt,
+        max_output_tokens=4096,
+        response_mime_type="application/json",
+    )
 
     # Step 4: Parse JSON response
     return parse_evaluation_response(raw_response)
@@ -123,6 +127,11 @@ def parse_evaluation_response(raw: str) -> dict:
     try:
         # Strip any accidental markdown code fences
         clean = re.sub(r"```json|```", "", raw).strip()
+        start = clean.find("{")
+        end = clean.rfind("}")
+        if start != -1 and end != -1 and end > start:
+            clean = clean[start : end + 1]
+
         result = json.loads(clean)
         # Ensure followups key always exists
         if "followups" not in result:

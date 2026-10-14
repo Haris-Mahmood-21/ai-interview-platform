@@ -129,11 +129,14 @@ Generate exactly {CODING_COUNT + THEORY_COUNT} interview questions:
 
 Requirements for coding questions:
 - Must be solvable in Python in under 20 minutes
-- Include a clear example with input and expected output
+- In question_text, clearly specify the required function name, parameters, and return type with examples
 - Set "test_cases" as a list of 3 test objects with "input" and "expected" fields
-- The "input" field must be valid Python assignment statements ending with a print() call
-  Example: "nums = [1,2,3]\\ntarget = 5\\nprint(twoSum(nums, target))"
-- The "expected" field must be the exact printed output
+- CRITICAL for test cases:
+  1. Do NOT define or implement the solution function inside "input". The candidate will write the function.
+  2. The "input" string must ONLY set up input variables and print the function call.
+     Example: "nums = [2, 7, 11, 15]\\ntarget = 9\\nprint(twoSum(nums, target))"
+  3. The "expected" field must be the exact printed string output.
+     Example: "[0, 1]"
 
 Requirements for theory questions:
 - Should test conceptual understanding, not memorization
@@ -145,11 +148,11 @@ Return ONLY a valid JSON array. No markdown, no explanation, no code blocks:
   {{
     "type": "coding",
     "difficulty": "{difficulty}",
-    "question_text": "full question with example",
+    "question_text": "full question description specifying function name and signature",
     "test_cases": [
-      {{"input": "x = 5\\nprint(myFunc(x))", "expected": "25"}},
-      {{"input": "x = 0\\nprint(myFunc(x))", "expected": "0"}},
-      {{"input": "x = 3\\nprint(myFunc(x))", "expected": "9"}}
+      {{"input": "nums = [1, 2, 3]\\nprint(solutionFunc(nums))", "expected": "6"}},
+      {{"input": "nums = []\\nprint(solutionFunc(nums))", "expected": "0"}},
+      {{"input": "nums = [5]\\nprint(solutionFunc(nums))", "expected": "5"}}
     ]
   }},
   {{
@@ -199,7 +202,11 @@ def generate_questions_with_llm(
         mode=mode,
     )
 
-    raw = call_gemini(prompt)
+    raw = call_gemini(
+        prompt,
+        max_output_tokens=8192,
+        response_mime_type="application/json",
+    )
 
     # Parse and validate
     questions = parse_and_validate_questions(raw, difficulty)
@@ -216,17 +223,24 @@ def generate_questions_with_llm(
 def parse_and_validate_questions(raw: str, difficulty: str) -> list[dict]:
     """
     Parse Gemini response into validated question list.
-    Handles common formatting issues.
+    Handles common formatting issues and markdown wrappers.
     """
     try:
         clean = re.sub(r"```json|```", "", raw).strip()
+
+        # If wrapped or preceded by extra text, isolate the JSON array
+        start = clean.find("[")
+        end = clean.rfind("]")
+        if start != -1 and end != -1 and end > start:
+            clean = clean[start : end + 1]
+
         data = json.loads(clean)
 
         if not isinstance(data, list):
             return []
 
         validated = []
-        for i, q in enumerate(data):
+        for q in data:
             if not isinstance(q, dict):
                 continue
             if not q.get("question_text", "").strip():
@@ -235,7 +249,6 @@ def parse_and_validate_questions(raw: str, difficulty: str) -> list[dict]:
                 continue
 
             validated.append({
-                "id": f"llm_{i}",
                 "type": q["type"],
                 "difficulty": q.get("difficulty", difficulty),
                 "question_text": q["question_text"].strip(),
@@ -249,6 +262,11 @@ def parse_and_validate_questions(raw: str, difficulty: str) -> list[dict]:
 
         # Take up to the counts we need
         result = coding[:CODING_COUNT] + theory[:THEORY_COUNT]
+
+        # Assign clean, sequential string IDs
+        for idx, q in enumerate(result):
+            q["id"] = f"llm_{idx}"
+
         return result
 
     except (json.JSONDecodeError, ValueError, KeyError):

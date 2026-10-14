@@ -133,11 +133,20 @@ def generate_followup_questions(
     )
 
     # Step 4: Call Gemini
-    raw = call_gemini(prompt, max_output_tokens=1024)
+    raw = call_gemini(
+        prompt,
+        max_output_tokens=4096,
+        response_mime_type="application/json",
+    )
 
     # Step 5: Parse response
     try:
         clean = re.sub(r"```json|```", "", raw).strip()
+        start = clean.find("[")
+        end = clean.rfind("]")
+        if start != -1 and end != -1 and end > start:
+            clean = clean[start : end + 1]
+
         questions = json.loads(clean)
         if isinstance(questions, list):
             return [q for q in questions if isinstance(q, str)][:count]

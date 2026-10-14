@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -11,6 +12,8 @@ from app.models.user import User
 from app.schemas.question import InterviewPaperResponse
 from app.services.question_generator import get_general_paper, get_resume_paper
 from app.services.scoring_service import calculate_total_score
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/questions", tags=["Question Generation"])
 
@@ -28,48 +31,53 @@ def generate_paper(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    if data.mode not in {"general", "resume"}:
+    mode = (data.mode or "").lower().strip()
+    category = data.category.lower().strip() if data.category else None
+
+    if mode not in {"general", "resume"}:
         raise HTTPException(
             status_code=400,
             detail="Mode must be either 'general' or 'resume'",
         )
 
-    if data.mode == "general" and not data.category:
+    if mode == "general" and not category:
         raise HTTPException(
             status_code=400,
             detail="Please select a domain for general mode.",
         )
 
-    if data.category and data.category not in VALID_CATEGORIES:
+    if category and category not in VALID_CATEGORIES:
         raise HTTPException(
             status_code=400,
             detail=f"Domain must be one of: {', '.join(VALID_CATEGORIES)}",
         )
 
     try:
-        if data.mode == "general":
+        if mode == "general":
             paper = get_general_paper(
                 db=db,
                 user_id=current_user.id,
-                category=data.category,
+                category=category,
             )
         else:
             paper = get_resume_paper(
                 db=db,
                 user_id=current_user.id,
-                category=data.category,
+                category=category,
             )
 
     except ValueError as e:
+        logger.warning(f"Failed to generate paper (user={current_user.id}, mode={mode}): {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
     except Exception as e:
+        logger.error(f"Unexpected error generating paper (user={current_user.id}, mode={mode}): {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail=f"Failed to generate paper: {str(e)}",
         )
 
-    paper["category"] = paper.get("category", data.category or "")
+    paper["category"] = paper.get("category", category or "")
 
     return paper
 
