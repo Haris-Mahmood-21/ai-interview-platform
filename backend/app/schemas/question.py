@@ -1,17 +1,16 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 
 
 class QuestionOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int | str
     type: str
     difficulty: str
     question_text: str
     test_cases: Optional[list | str] = None
     source: str = "ai_generated"
-
-    class Config:
-        from_attributes = True
 
 
 class InterviewPaperResponse(BaseModel):

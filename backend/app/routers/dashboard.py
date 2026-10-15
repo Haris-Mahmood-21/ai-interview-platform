@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+from datetime import datetime
 import json
 
 from app.dependencies.auth import get_current_user
@@ -64,20 +65,20 @@ def get_dashboard(
         )
 
     total_sessions = len(attempts)
-    avg_score = round(sum(a.total_score for a in attempts) / total_sessions, 1)
-    best_score = round(max(a.total_score for a in attempts), 1)
+    avg_score = round(sum((a.total_score or 0.0) for a in attempts) / total_sessions, 1)
+    best_score = round(max((a.total_score or 0.0) for a in attempts), 1)
 
     # Recent 10 attempts
     recent_attempts = [
         AttemptSummary(
             id=a.id,
-            category=a.category,
-            mode=a.mode,
-            coding_score=round(a.coding_score, 1),
-            theory_score=round(a.theory_score, 1),
-            total_score=round(a.total_score, 1),
-            time_taken=a.time_taken,
-            date=a.date.strftime("%b %d, %Y"),
+            category=a.category or "",
+            mode=a.mode or "",
+            coding_score=round(a.coding_score or 0.0, 1),
+            theory_score=round(a.theory_score or 0.0, 1),
+            total_score=round(a.total_score or 0.0, 1),
+            time_taken=a.time_taken or 0,
+            date=a.date.strftime("%b %d, %Y") if a.date else "",
         )
         for a in attempts[:10]
     ]
@@ -85,28 +86,29 @@ def get_dashboard(
     # Domain stats
     domain_map: dict[str, list[float]] = {}
     for a in attempts:
-        if a.category not in domain_map:
-            domain_map[a.category] = []
-        domain_map[a.category].append(a.total_score)
+        cat = a.category or "General"
+        if cat not in domain_map:
+            domain_map[cat] = []
+        domain_map[cat].append(a.total_score or 0.0)
 
     domain_stats = [
         DomainStats(
             category=cat,
             attempts=len(scores),
-            avg_score=round(sum(scores) / len(scores), 1),
-            best_score=round(max(scores), 1),
+            avg_score=round(sum(scores) / len(scores), 1) if scores else 0.0,
+            best_score=round(max(scores), 1) if scores else 0.0,
         )
         for cat, scores in domain_map.items()
     ]
 
     # Score trend — last 10 attempts chronologically
-    trend_attempts = sorted(attempts[-10:], key=lambda a: a.date)
+    trend_attempts = sorted(attempts[-10:], key=lambda a: a.date if a.date else datetime.min)
     score_trend = [
         {
             "session": i + 1,
-            "score": round(a.total_score, 1),
-            "date": a.date.strftime("%b %d"),
-            "category": a.category,
+            "score": round(a.total_score or 0.0, 1),
+            "date": a.date.strftime("%b %d") if a.date else "",
+            "category": a.category or "",
         }
         for i, a in enumerate(trend_attempts)
     ]
@@ -137,7 +139,6 @@ def get_attempt_detail(
     )
 
     if not attempt:
-        from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Attempt not found")
 
     responses = (
@@ -149,13 +150,13 @@ def get_attempt_detail(
     return {
         "attempt": {
             "id": attempt.id,
-            "category": attempt.category,
-            "mode": attempt.mode,
-            "coding_score": attempt.coding_score,
-            "theory_score": attempt.theory_score,
-            "total_score": attempt.total_score,
-            "time_taken": attempt.time_taken,
-            "date": attempt.date.strftime("%b %d, %Y %H:%M"),
+            "category": attempt.category or "",
+            "mode": attempt.mode or "",
+            "coding_score": attempt.coding_score or 0.0,
+            "theory_score": attempt.theory_score or 0.0,
+            "total_score": attempt.total_score or 0.0,
+            "time_taken": attempt.time_taken or 0,
+            "date": attempt.date.strftime("%b %d, %Y %H:%M") if attempt.date else "",
         },
         "responses": [
             {
@@ -163,7 +164,7 @@ def get_attempt_detail(
                 "question_id": r.question_id,
                 "user_answer": r.user_answer,
                 "ai_feedback": json.loads(r.ai_feedback) if r.ai_feedback else None,
-                "score": r.score,
+                "score": r.score or 0.0,
                 "is_correct": r.is_correct,
             }
             for r in responses

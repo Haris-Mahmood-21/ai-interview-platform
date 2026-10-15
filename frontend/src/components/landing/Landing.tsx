@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
 import {
   ArrowRight,
   BookOpen,
@@ -26,11 +25,6 @@ import { Button } from "@/components/ui/button";
 import ScoreRing from "@/components/ui/score-ring";
 import { DOMAINS } from "@/lib/domains";
 import { useAuthStore } from "@/store/authStore";
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  show: { opacity: 1, y: 0 },
-};
 
 const FEATURES = [
   {

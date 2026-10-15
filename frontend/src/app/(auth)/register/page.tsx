@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, CircleAlert, Lock, Mail, User } from "lucide-react";
 import api from "@/lib/api";
@@ -58,8 +59,12 @@ export default function RegisterPage() {
       setAuth(userData, tokenData.access_token);
 
       router.push("/dashboard");
-    } catch (err: any) {
-      setError(err.response?.data?.detail || "Registration failed");
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.detail || "Registration failed");
+      } else {
+        setError("Registration failed");
+      }
     } finally {
       setLoading(false);
     }

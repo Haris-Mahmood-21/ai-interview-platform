@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import axios from "axios";
 import AppShell, { PageHeader } from "@/components/layout/AppShell";
 import AIThinking from "@/components/interview/AIThinking";
 import api from "@/lib/api";
@@ -148,7 +149,21 @@ export default function ConfigPage() {
   const searchParams = useSearchParams();
   const setPaper = useInterviewStore((s) => s.setPaper);
 
-  const [category, setCategory] = useState("");
+  const paramCategory = searchParams.get("category");
+  const [category, setCategory] = useState<string>(() => {
+    return paramCategory && CATEGORIES.find((c) => c.id === paramCategory)
+      ? paramCategory
+      : "";
+  });
+  const [prevParamCat, setPrevParamCat] = useState(paramCategory);
+
+  if (paramCategory !== prevParamCat) {
+    setPrevParamCat(paramCategory);
+    if (paramCategory && CATEGORIES.find((c) => c.id === paramCategory)) {
+      setCategory(paramCategory);
+    }
+  }
+
   const [mode, setMode] = useState("general");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -160,14 +175,6 @@ export default function ConfigPage() {
   const [dragging, setDragging] = useState(false);
 
   const fileRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    const cat = searchParams.get("category");
-
-    if (cat && CATEGORIES.find((c) => c.id === cat)) {
-      setCategory(cat);
-    }
-  }, [searchParams]);
 
   const uploadFile = async (file: File) => {
     if (file.type && file.type !== "application/pdf") {
@@ -253,11 +260,15 @@ export default function ConfigPage() {
 
       setPaper(data.paper_id, data.category, mode, data.questions);
       router.push("/session");
-    } catch (err: any) {
-      setError(
-        err.response?.data?.detail ||
-          "Failed to generate interview. Please try again."
-      );
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        setError(
+          err.response?.data?.detail ||
+            "Failed to generate interview. Please try again."
+        );
+      } else {
+        setError("Failed to generate interview. Please try again.");
+      }
       setLoading(false);
     }
   };

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, CircleAlert, Lock, Mail } from "lucide-react";
 import api from "@/lib/api";
@@ -10,6 +11,7 @@ import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import AuthLayout, { AuthSpinner } from "@/components/auth/AuthLayout";
 import IconField from "@/components/auth/IconField";
+import { useMounted } from "@/lib/use-mounted";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,7 +23,7 @@ export default function LoginPage() {
     logout,
   } = useAuthStore();
 
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
 
   const [form, setForm] = useState({
     email: "",
@@ -38,9 +40,7 @@ export default function LoginPage() {
     if (!token && isAuthenticated) {
       logout();
     }
-
-    setMounted(true);
-  }, []);
+  }, [isAuthenticated, logout]);
 
   // Redirect authenticated users
   useEffect(() => {
@@ -67,10 +67,14 @@ export default function LoginPage() {
       setAuth(userData, tokenData.access_token);
 
       router.push("/dashboard");
-    } catch (err: any) {
-      setError(
-        err.response?.data?.detail || "Invalid email or password"
-      );
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        setError(
+          err.response?.data?.detail || "Invalid email or password"
+        );
+      } else {
+        setError("Invalid email or password");
+      }
     } finally {
       setLoading(false);
     }

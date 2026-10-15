@@ -14,14 +14,40 @@ import SessionHistoryTable from "@/components/dashboard/SessionHistoryTable";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
+import { useMounted } from "@/lib/use-mounted";
+
+export interface RecentAttempt {
+  id: number;
+  category: string;
+  mode: string;
+  coding_score: number;
+  theory_score: number;
+  total_score: number;
+  time_taken: number;
+  date: string;
+}
+
+export interface DomainStat {
+  category: string;
+  attempts: number;
+  avg_score: number;
+  best_score: number;
+}
+
+export interface ScoreTrendPoint {
+  session: number;
+  score: number;
+  date: string;
+  category: string;
+}
 
 interface DashboardData {
   total_sessions: number;
   avg_score: number;
   best_score: number;
-  recent_attempts: any[];
-  domain_stats: any[];
-  score_trend: any[];
+  recent_attempts: RecentAttempt[];
+  domain_stats: DomainStat[];
+  score_trend: ScoreTrendPoint[];
 }
 
 function greeting() {
@@ -65,11 +91,7 @@ export default function DashboardPage() {
   const { user, isAuthenticated } = useAuthStore();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useMounted();
 
   useEffect(() => {
     if (!mounted) return;

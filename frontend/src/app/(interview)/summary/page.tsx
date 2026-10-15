@@ -7,14 +7,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
   Brain,
-  Calendar,
   CheckCircle2,
   ChevronDown,
   Clock,
   CodeXml,
   Compass,
   FileText,
-  Flame,
   LayoutDashboard,
   Lightbulb,
   MessageSquare,
@@ -26,7 +24,6 @@ import {
 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import { useInterviewStore } from "@/store/interviewStore";
-import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import ScoreRing from "@/components/ui/score-ring";
@@ -36,18 +33,31 @@ import {
   scoreTone,
   scoreVerdict,
   TONE_SOFT,
-  TONE_TEXT,
 } from "@/lib/domains";
 import { cn } from "@/lib/utils";
+import { CodeTestResult } from "@/types/api.types";
+
+interface FallbackAttempt {
+  id: number;
+  category: string;
+  mode: string;
+  coding_score: number;
+  theory_score: number;
+  total_score: number;
+  time_taken: number;
+  date: string;
+}
+
+interface FallbackAttemptData {
+  attempt: FallbackAttempt;
+}
 
 export default function InterviewSummaryPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isAuthenticated } = useAuthStore();
 
   const {
     results,
-    questions,
     category,
     mode,
     savedAttemptId,
@@ -63,16 +73,15 @@ export default function InterviewSummaryPage() {
     1: true,
   });
 
-  // Fallback for direct URL access with attemptId
-  const [fallbackData, setFallbackData] = useState<any>(null);
-  const [fallbackLoading, setFallbackLoading] = useState(false);
-
   const attemptIdParam = searchParams.get("attemptId") || savedAttemptId;
   const hasStoreResults = results && results.length > 0 && results.some((r) => r.completed);
 
+  // Fallback for direct URL access with attemptId
+  const [fallbackData, setFallbackData] = useState<FallbackAttemptData | null>(null);
+  const [fallbackLoading, setFallbackLoading] = useState(() => !hasStoreResults && !!attemptIdParam);
+
   useEffect(() => {
     if (!hasStoreResults && attemptIdParam) {
-      setFallbackLoading(true);
       api
         .get(`/dashboard/attempts/${attemptIdParam}`)
         .then((res) => setFallbackData(res.data))
@@ -103,7 +112,7 @@ export default function InterviewSummaryPage() {
     results.forEach((r) => {
       if (r.type === "coding" && r.codeResult?.results) {
         total += r.codeResult.results.length;
-        passed += r.codeResult.results.filter((tc: any) => tc.passed).length;
+        passed += r.codeResult.results.filter((tc: CodeTestResult) => tc.passed).length;
       }
     });
     return { passed, total };
@@ -516,7 +525,7 @@ export default function InterviewSummaryPage() {
                             Test Case Verification
                           </span>
                           <div className="space-y-2">
-                            {res.codeResult.results.map((tc: any, tcIdx: number) => (
+                            {res.codeResult.results.map((tc: CodeTestResult, tcIdx: number) => (
                               <div
                                 key={tcIdx}
                                 className={cn(
@@ -549,7 +558,7 @@ export default function InterviewSummaryPage() {
                                   </span>
                                   {tc.time && (
                                     <span className="text-muted-foreground/70">
-                                      {Math.round(tc.time * 1000)}ms
+                                      {Math.round(parseFloat(tc.time) * 1000)}ms
                                     </span>
                                   )}
                                 </div>

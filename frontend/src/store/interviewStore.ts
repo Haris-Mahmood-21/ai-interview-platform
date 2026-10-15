@@ -116,20 +116,22 @@ export const useInterviewStore = create<InterviewState>((set, get) => ({
 
   getAverageCodingScore: () => {
     const { results } = get();
-    const coding = results.filter(
-      (r) => r.type === "coding" && r.completed
-    );
+    const coding = results.filter((r) => r.type === "coding");
     if (!coding.length) return 0;
-    return coding.reduce((sum, r) => sum + r.score, 0) / coding.length;
+    return (
+      coding.reduce((sum, r) => sum + (r.completed ? r.score : 0), 0) /
+      coding.length
+    );
   },
 
   getAverageTheoryScore: () => {
     const { results } = get();
-    const theory = results.filter(
-      (r) => r.type === "theory" && r.completed
-    );
+    const theory = results.filter((r) => r.type === "theory");
     if (!theory.length) return 0;
-    return theory.reduce((sum, r) => sum + r.score, 0) / theory.length;
+    return (
+      theory.reduce((sum, r) => sum + (r.completed ? r.score : 0), 0) /
+      theory.length
+    );
   },
 
   getElapsedSeconds: () => {

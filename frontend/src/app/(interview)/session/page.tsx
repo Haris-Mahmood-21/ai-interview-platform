@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import axios from "axios";
 import type { Monaco } from "@monaco-editor/react";
 import FeedbackDisplay from "@/components/interview/FeedbackDisplay";
 import AIThinking from "@/components/interview/AIThinking";
@@ -224,8 +225,12 @@ export default function SessionPage() {
           setResult(currentIndex, { followupsLoading: false });
         }
       }
-    } catch (err: any) {
-      setError(err.response?.data?.detail || "Evaluation failed. Try again.");
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.detail || "Evaluation failed. Try again.");
+      } else {
+        setError("Evaluation failed. Try again.");
+      }
       setLoading(false);
     }
   };
@@ -259,10 +264,14 @@ export default function SessionPage() {
         score: data.score,
         completed: true,
       });
-    } catch (err: any) {
-      setError(
-        err.response?.data?.detail || "Code submission failed. Try again."
-      );
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        setError(
+          err.response?.data?.detail || "Code submission failed. Try again."
+        );
+      } else {
+        setError("Code submission failed. Try again.");
+      }
     } finally {
       setLoading(false);
     }

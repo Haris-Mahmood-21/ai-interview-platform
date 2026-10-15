@@ -19,11 +19,43 @@ import {
 } from "@/lib/domains";
 import { cn } from "@/lib/utils";
 
+interface SessionAttempt {
+  id: number;
+  category: string;
+  mode: string;
+  coding_score: number;
+  theory_score: number;
+  total_score: number;
+  time_taken: number;
+  date: string;
+}
+
+interface AiFeedback {
+  overall_feedback?: string;
+  improvement_suggestions?: string;
+  key_points_covered?: string[];
+  missing_points?: string[];
+}
+
+interface SessionResponseItem {
+  id: number;
+  question_id: number | string;
+  user_answer: string;
+  ai_feedback: AiFeedback | null;
+  score: number;
+  is_correct: boolean | null;
+}
+
+interface SessionDetailData {
+  attempt: SessionAttempt;
+  responses: SessionResponseItem[];
+}
+
 export default function SessionDetailPage() {
   const router = useRouter();
   const params = useParams();
   const { isAuthenticated } = useAuthStore();
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<SessionDetailData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,7 +65,7 @@ export default function SessionDetailPage() {
       .then((res) => setData(res.data))
       .catch(() => router.push("/dashboard"))
       .finally(() => setLoading(false));
-  }, [isAuthenticated, params.id]);
+  }, [isAuthenticated, params.id, router]);
 
   if (loading) {
     return (
@@ -134,7 +166,7 @@ export default function SessionDetailPage() {
         {responses.length > 0 && (
           <section className="space-y-4">
             <h2 className="text-lg font-semibold">Question feedback</h2>
-            {responses.map((r: any, i: number) => (
+            {responses.map((r: SessionResponseItem, i: number) => (
               <motion.article
                 key={r.id}
                 initial={{ opacity: 0, y: 10 }}
