@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Sora, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
+import AmbientBackground from "@/components/layout/AmbientBackground";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -41,7 +42,10 @@ export default function RootLayout({
       <body
         className={`${jakarta.variable} ${sora.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
-        <Providers>{children}</Providers>
+        <Providers>
+          <AmbientBackground />
+          {children}
+        </Providers>
       </body>
     </html>
   );

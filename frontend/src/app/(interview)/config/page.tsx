@@ -121,17 +121,17 @@ function SelectCard({
       onClick={onClick}
       aria-pressed={selected}
       className={cn(
-        "group relative w-full rounded-2xl border p-5 text-left transition-all duration-200",
+        "group relative w-full rounded-2xl border p-5 text-left transition-colors duration-150",
         "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30",
         selected
           ? "border-primary/60 bg-primary/[0.09] shadow-[0_0_0_1px_var(--primary),0_12px_40px_-12px_var(--primary)]"
-          : "border-white/[0.07] bg-white/[0.02] hover:-translate-y-0.5 hover:border-white/15 hover:bg-white/[0.04]",
+          : "border-white/[0.07] bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.05]",
         className
       )}
     >
       <span
         className={cn(
-          "absolute right-4 top-4 grid size-5 place-items-center rounded-full border transition-all",
+          "absolute right-4 top-4 grid size-5 place-items-center rounded-full border transition-colors duration-150",
           selected
             ? "border-transparent bg-primary text-white"
             : "border-white/15 text-transparent"

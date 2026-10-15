@@ -1,21 +1,27 @@
-import google.generativeai as genai
-from google.generativeai.types import GenerationConfig
+from google import genai
+from google.genai import types
 
 from app.config import settings
 
-genai.configure(api_key=settings.GEMINI_API_KEY)
-
-_model = None
+_client: genai.Client | None = None
 
 # Default timeout for Gemini calls (seconds)
 GEMINI_TIMEOUT = 60
 
 
+def get_gemini_client() -> genai.Client:
+    global _client
+    if _client is None:
+        _client = genai.Client(
+            api_key=settings.GEMINI_API_KEY,
+            http_options=types.HttpOptions(timeout=GEMINI_TIMEOUT * 1000),
+        )
+    return _client
+
+
 def get_gemini_model():
-    global _model
-    if _model is None:
-        _model = genai.GenerativeModel("gemini-2.5-flash")
-    return _model
+    """Warmup helper for lifespan event in app.main."""
+    return get_gemini_client()
 
 
 def call_gemini(
@@ -23,7 +29,7 @@ def call_gemini(
     max_output_tokens: int = 8192,
     response_mime_type: str | None = None,
 ) -> str:
-    """Send a prompt to Gemini and return the text response.
+    """Send a prompt to Gemini using the official google-genai SDK and return the text response.
 
     Args:
         prompt: The input prompt text.
@@ -33,22 +39,25 @@ def call_gemini(
         response_mime_type: Optional MIME type (e.g. 'application/json')
             to enforce structured JSON output.
     """
-    model = get_gemini_model()
+    client = get_gemini_client()
     config_args = {"max_output_tokens": max_output_tokens}
     if response_mime_type:
         config_args["response_mime_type"] = response_mime_type
 
-    response = model.generate_content(
-        prompt,
-        generation_config=GenerationConfig(**config_args),
-        request_options={"timeout": GEMINI_TIMEOUT},
+    config = types.GenerateContentConfig(**config_args)
+
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt,
+        config=config,
     )
 
-    try:
+    if response.text:
         return response.text
-    except (ValueError, AttributeError):
-        if response.candidates and response.candidates[0].content.parts:
-            return "".join(
-                getattr(p, "text", "") for p in response.candidates[0].content.parts
-            )
-        raise
+
+    if response.candidates and response.candidates[0].content and response.candidates[0].content.parts:
+        return "".join(
+            getattr(p, "text", "") for p in response.candidates[0].content.parts
+        )
+
+    return ""
