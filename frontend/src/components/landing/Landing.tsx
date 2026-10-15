@@ -9,14 +9,12 @@ import {
   CircleCheck,
   CloudUpload,
   CodeXml,
-  Database,
   FileText,
   MessagesSquare,
   ScanSearch,
   ShieldCheck,
   Sparkles,
   SquareTerminal,
-  Zap,
 } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import AmbientBackground from "@/components/layout/AmbientBackground";
@@ -75,15 +73,6 @@ const STEPS = [
     title: "Improve",
     desc: "Get instant AI feedback, follow-ups and analytics to close your gaps.",
   },
-];
-
-const STACK = [
-  { name: "Google Gemini", icon: Bot },
-  { name: "ChromaDB", icon: Database },
-  { name: "FastAPI", icon: Zap },
-  { name: "Next.js", icon: CodeXml },
-  { name: "Judge0", icon: SquareTerminal },
-  { name: "PostgreSQL", icon: Database },
 ];
 
 function HeroPreview() {
@@ -303,24 +292,6 @@ export default function Landing() {
               <h3 className="text-xl font-semibold">{s.title}</h3>
               <p className="mx-auto mt-2 max-w-xs text-sm text-muted-foreground">{s.desc}</p>
             </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── TECH STACK ───────────────────────────────────── */}
-      <section className="mx-auto max-w-7xl px-4 pb-24 sm:px-6">
-        <p className="mb-6 text-center text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-          Built with
-        </p>
-        <div className="flex flex-wrap justify-center gap-3">
-          {STACK.map((t) => (
-            <span
-              key={t.name}
-              className="glass flex items-center gap-2 rounded-full px-4 py-2 text-sm text-secondary-foreground"
-            >
-              <t.icon className="size-4 text-brand-cyan" />
-              {t.name}
-            </span>
           ))}
         </div>
       </section>

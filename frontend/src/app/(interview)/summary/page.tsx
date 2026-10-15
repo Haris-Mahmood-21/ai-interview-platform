@@ -68,10 +68,7 @@ export default function InterviewSummaryPage() {
   } = useInterviewStore();
 
   // Expanded cards tracker
-  const [expandedCards, setExpandedCards] = useState<Record<number, boolean>>({
-    0: true,
-    1: true,
-  });
+  const [expandedCards, setExpandedCards] = useState<Record<number, boolean>>({});
 
   const attemptIdParam = searchParams.get("attemptId") || savedAttemptId;
   const hasStoreResults = results && results.length > 0 && results.some((r) => r.completed);
