@@ -11,7 +11,7 @@ import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import AuthLayout, { AuthSpinner } from "@/components/auth/AuthLayout";
 import IconField from "@/components/auth/IconField";
-import { useMounted } from "@/lib/use-mounted";
+import { useMounted } from "@/hooks/use-mounted";
 
 export default function LoginPage() {
   const router = useRouter();

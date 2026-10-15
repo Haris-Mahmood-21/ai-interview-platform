@@ -86,13 +86,18 @@ frontend/src/
 │   ├── dashboard/               # DomainRadar, ScoreTrendChart, MetricCards, SessionHistory
 │   ├── layout/                  # Navbar, AppShell, AmbientBackground
 │   └── ui/                      # ScoreRing, Button, Card, Input, Progress
+├── hooks/
+│   ├── index.ts                 # Hooks barrel exports
+│   └── use-mounted.ts           # Hydration-safe client mounting hook
 ├── lib/
 │   ├── api.ts                   # Axios client instance with auth interceptor
 │   ├── domains.ts               # Domain definitions, color tokens, duration helpers
 │   └── utils.ts                 # cn() class merge helper
 ├── store/
+│   ├── index.ts                 # Store barrel exports
 │   ├── authStore.ts             # JWT token and user authentication state
 │   └── interviewStore.ts        # Live interview paper, answers, scores, and test results
 └── types/
+    ├── index.ts                 # Types barrel exports
     └── api.types.ts             # TypeScript interfaces for API requests and responses
 ```

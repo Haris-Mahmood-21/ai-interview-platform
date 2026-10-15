@@ -186,30 +186,38 @@ pnpm dev # or npm run dev
 ai-interview-platform/
 ├── frontend/                     # Next.js 16 App Router client
 │   ├── src/
-│   │   ├── app/
-│   │   │   ├── (auth)/           # Split-screen Login & Register pages
-│   │   │   ├── (dashboard)/      # Dashboard & Session history
-│   │   │   ├── (interview)/      # Config, Live Session, and Result Summary (/summary)
-│   │   │   ├── globals.css       # Midnight-navy tokenized design system
-│   │   │   └── page.tsx          # Landing page with interactive hero & metrics
-│   │   ├── components/
-│   │   │   ├── brand/            # AI Interview Platform logo & marks
-│   │   │   ├── landing/          # Hero, features, metrics, and CTA sections
-│   │   │   ├── interview/        # Monaco code runner, test cases, AIThinking loader
-│   │   │   ├── dashboard/        # DomainRadar, ScoreTrendChart, MetricCards
-│   │   │   └── ui/               # ScoreRing, buttons, cards, glass containers
-│   │   ├── lib/                  # API client, domain definitions, score helpers
-│   │   └── store/                # Zustand stores (authStore, interviewStore)
+│   │   ├── app/                  # Next.js App Router (auth, dashboard, interview)
+│   │   ├── components/           # UI, layout, brand, interview, and dashboard components
+│   │   ├── hooks/                # Custom React hooks (useMounted, etc.)
+│   │   ├── lib/                  # API client, domain definitions, styling helpers
+│   │   ├── store/                # Zustand stores (useAuthStore, useInterviewStore)
+│   │   └── types/                # TypeScript interface definitions (api.types)
+│   ├── public/                   # Static SVG assets & icons
+│   ├── package.json              # Frontend scripts and dependencies
+│   └── tsconfig.json             # TypeScript configuration and path aliases
 ├── backend/                      # FastAPI Python backend
 │   ├── app/
+│   │   ├── core/                 # JWT security & custom exceptions
+│   │   ├── dependencies/         # FastAPI auth & database dependency injectors
 │   │   ├── models/               # SQLAlchemy models (User, Attempt, Question, etc.)
-│   │   ├── routers/              # Questions, Code execution, Theory, Resume, Dashboard
-│   │   ├── schemas/              # Pydantic validation schemas
-│   │   └── services/             # Gemini client, Judge0 runner, RAG evaluator
-│   ├── knowledge_base/           # Domain source markdown files & ChromaDB ingestion
-│   ├── migration/                # Alembic database revision scripts
-│   └── scripts/                  # Question seeder & admin scripts
+│   │   ├── routers/              # Route endpoints (auth, code, theory, resume, etc.)
+│   │   ├── schemas/              # Pydantic request & response validation schemas
+│   │   ├── services/             # Gemini client, Judge0 runner, RAG evaluator
+│   │   ├── config.py             # Application settings & environment parsing
+│   │   ├── database.py           # Database engine & session setup
+│   │   └── main.py               # FastAPI application entrypoint & lifespan
+│   ├── knowledge_base/           # Domain source corpora & ChromaDB ingestion
+│   ├── migrations/               # Alembic database revision scripts
+│   ├── scripts/                  # Question seeder & admin scripts
+│   ├── tests/                    # Unit and integration test suite
+│   ├── alembic.ini               # Alembic migration configuration
+│   └── pyproject.toml            # Poetry dependencies, pytest, and linter settings
+├── docs/                         # System architecture & planning roadmap
+│   ├── architecture.md           # Architecture specs, data flow, & design decisions
+│   └── planning/                 # Backend performance & frontend redesign plans
 ├── docker-compose.yml            # PostgreSQL & ChromaDB containers
+├── .editorconfig                 # Monorepo editor styling rules
+├── .gitattributes                # Consistent line-ending normalization
 └── README.md                     # Project documentation
 ```
 

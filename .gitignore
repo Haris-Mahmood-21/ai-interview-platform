@@ -1,25 +1,40 @@
-# Environment files — NEVER commit these
+# Environment files — NEVER commit secrets
 .env
-.env.local
-.env.production
+.env.*
+!.env.example
 backend/.env
-frontend/.env.local
+backend/.env.*
+!backend/.env.example
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
 
 # Python & Database
 __pycache__/
 *.py[cod]
+*$py.class
 *.egg-info/
 .venv/
+venv/
+ENV/
+env/
 dist/
+build/
 .pytest_cache/
+.coverage
+coverage/
 *.db
 *.sqlite
 *.sqlite3
 
-# Node
+# Node & Next.js
 node_modules/
 .next/
 out/
+.pnp
+.pnp.*
+*.tsbuildinfo
+next-env.d.ts
 
 # Uploads (user resumes)
 backend/uploads/*
@@ -28,14 +43,13 @@ backend/uploads/*
 # ChromaDB local data
 backend/chroma_data/
 
-# Planning docs (internal use — not for repo)
-backend-planning.md
-frontend-planning.md
-
-# OS
+# OS Files
 .DS_Store
 Thumbs.db
+Desktop.ini
 
-# IDE
+# IDE & Editor Files
 .vscode/
 .idea/
+*.sublime-project
+*.sublime-workspace

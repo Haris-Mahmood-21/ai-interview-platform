@@ -14,7 +14,7 @@ import SessionHistoryTable from "@/components/dashboard/SessionHistoryTable";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { useMounted } from "@/lib/use-mounted";
+import { useMounted } from "@/hooks/use-mounted";
 
 export interface RecentAttempt {
   id: number;

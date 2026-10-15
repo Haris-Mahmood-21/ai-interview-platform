@@ -1,12 +1,4 @@
-import { useSyncExternalStore } from "react";
-
-const emptySubscribe = () => () => {};
-
-export function useMounted(): boolean {
-  return useSyncExternalStore(
-    emptySubscribe,
-    () => true,
-    () => false
-  );
-}
-
+/**
+ * @deprecated Prefer importing from `@/hooks` or `@/hooks/use-mounted`.
+ */
+export { useMounted } from "@/hooks/use-mounted";
