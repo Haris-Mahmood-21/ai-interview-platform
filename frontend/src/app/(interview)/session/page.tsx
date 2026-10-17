@@ -18,7 +18,12 @@ import {
   CodeSubmissionResponse,
   FollowupResponse,
 } from "@/types/api.types";
-import { getDomain } from "@/lib/domains";
+import {
+  getDomain,
+  scoreTone,
+  scoreVerdict,
+  TONE_SOFT,
+} from "@/lib/domains";
 import { cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
@@ -130,6 +135,8 @@ export default function SessionPage() {
   const [activeFollowup, setActiveFollowup] = useState<string | null>(null);
   const [followupAnswer, setFollowupAnswer] = useState("");
   const [followupLoading, setFollowupLoading] = useState(false);
+  const [expandedFollowupIdx, setExpandedFollowupIdx] = useState<number | null>(null);
+  const [followupError, setFollowupError] = useState<string | null>(null);
 
   const elapsed = useElapsed(startTime);
 
@@ -281,6 +288,7 @@ export default function SessionPage() {
     if (!followupAnswer.trim() || !activeFollowup) return;
 
     setFollowupLoading(true);
+    setFollowupError(null);
 
     try {
       const { data }: { data: TheoryEvaluationResponse } = await api.post(
@@ -307,8 +315,16 @@ export default function SessionPage() {
 
       setActiveFollowup(null);
       setFollowupAnswer("");
-    } catch {
-      // silently fail for follow-ups
+      setFollowupError(null);
+      setExpandedFollowupIdx(prev.length);
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        setFollowupError(
+          err.response?.data?.detail || "Follow-up evaluation failed. Try again."
+        );
+      } else {
+        setFollowupError("Follow-up evaluation failed. Try again.");
+      }
     } finally {
       setFollowupLoading(false);
     }
@@ -349,6 +365,8 @@ export default function SessionPage() {
       setCodeAnswer(DEFAULT_CODE);
       setActiveFollowup(null);
       setFollowupAnswer("");
+      setFollowupError(null);
+      setExpandedFollowupIdx(null);
       setError("");
       nextQuestion();
     }
@@ -776,6 +794,7 @@ export default function SessionPage() {
                         onClick={() => {
                           setActiveFollowup(open ? null : fq);
                           setFollowupAnswer("");
+                          setFollowupError(null);
                         }}
                         aria-expanded={open}
                         className="flex w-full items-start gap-3 px-4 py-3.5 text-left"
@@ -808,9 +827,21 @@ export default function SessionPage() {
                             className="overflow-hidden"
                           >
                             <div className="border-t border-primary/15 px-4 pb-4 pt-3">
+                              {followupError && (
+                                <div
+                                  role="alert"
+                                  className="mb-3 flex items-center gap-2 rounded-xl border border-danger/25 bg-danger/10 px-3.5 py-2.5 text-xs text-danger"
+                                >
+                                  <CircleAlert className="size-4 shrink-0" />
+                                  <span>{followupError}</span>
+                                </div>
+                              )}
                               <Textarea
                                 value={followupAnswer}
-                                onChange={(e) => setFollowupAnswer(e.target.value)}
+                                onChange={(e) => {
+                                  setFollowupAnswer(e.target.value);
+                                  if (followupError) setFollowupError(null);
+                                }}
                                 placeholder="Answer this follow-up question…"
                                 className="w-full resize-none rounded-xl border-primary/25 bg-black/20 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-4 focus-visible:ring-primary/20"
                                 rows={4}
@@ -840,6 +871,7 @@ export default function SessionPage() {
                                   onClick={() => {
                                     setActiveFollowup(null);
                                     setFollowupAnswer("");
+                                    setFollowupError(null);
                                   }}
                                   className="h-10 rounded-lg px-4 text-muted-foreground"
                                 >
@@ -860,23 +892,198 @@ export default function SessionPage() {
             {isAnswered &&
               currentResult.followupAnswers &&
               currentResult.followupAnswers.length > 0 && (
-                <div className="space-y-2">
-                  {currentResult.followupAnswers.map((fa) => (
-                    <div
-                      key={fa.question}
-                      className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3"
-                    >
-                      <CircleCheck className="size-4 shrink-0 text-success" />
-                      <p className="line-clamp-1 flex-1 text-sm text-secondary-foreground">
-                        {fa.question}
-                      </p>
-                      {fa.evaluation && (
-                        <span className="font-mono text-xs font-semibold text-foreground">
-                          {fa.evaluation.total_score}/100
-                        </span>
-                      )}
-                    </div>
-                  ))}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                      Follow-up Reviews ({currentResult.followupAnswers.length})
+                    </span>
+                    <span className="text-[0.7rem] text-muted-foreground">
+                      Click to expand review
+                    </span>
+                  </div>
+
+                  {currentResult.followupAnswers.map((fa, faIdx) => {
+                    const score = Math.round(fa.evaluation?.total_score ?? 0);
+                    const tone = scoreTone(score);
+                    const isExpanded = expandedFollowupIdx === faIdx;
+                    const evaluation = fa.evaluation?.evaluation;
+
+                    return (
+                      <div
+                        key={fa.question + faIdx}
+                        className={cn(
+                          "overflow-hidden rounded-2xl border transition-all duration-200",
+                          isExpanded
+                            ? "border-white/15 bg-white/[0.04] shadow-lg shadow-black/20"
+                            : "border-white/[0.06] bg-white/[0.02] hover:border-white/10 hover:bg-white/[0.03]"
+                        )}
+                      >
+                        {/* Header bar / accordion toggle */}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExpandedFollowupIdx(isExpanded ? null : faIdx)
+                          }
+                          aria-expanded={isExpanded}
+                          className="flex w-full items-start justify-between gap-3 p-4 text-left transition-colors"
+                        >
+                          <div className="flex items-start gap-3 min-w-0 flex-1">
+                            {/* Dynamic status icon based on score, NOT hardcoded green */}
+                            <span className="mt-0.5 shrink-0">
+                              {tone === "success" ? (
+                                <CircleCheck className="size-4 text-success" />
+                              ) : tone === "warning" ? (
+                                <CircleAlert className="size-4 text-warning" />
+                              ) : (
+                                <CircleX className="size-4 text-danger" />
+                              )}
+                            </span>
+
+                            <div className="min-w-0 flex-1">
+                              <span className="block text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                                Follow-up #{faIdx + 1}
+                              </span>
+                              <p
+                                className={cn(
+                                  "mt-0.5 text-sm font-medium text-foreground leading-snug",
+                                  !isExpanded && "line-clamp-2"
+                                )}
+                              >
+                                {fa.question}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2.5 shrink-0 pt-0.5">
+                            <span
+                              className={cn(
+                                "rounded-full px-2 py-0.5 font-mono text-xs font-semibold tabular-nums",
+                                TONE_SOFT[tone]
+                              )}
+                            >
+                              {score}/100
+                            </span>
+                            <motion.span
+                              animate={{ rotate: isExpanded ? 180 : 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="text-muted-foreground"
+                            >
+                              <ChevronDown className="size-4" />
+                            </motion.span>
+                          </div>
+                        </button>
+
+                        {/* Expandable Review Details */}
+                        <AnimatePresence initial={false}>
+                          {isExpanded && (
+                            <motion.div
+                              key="details"
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="space-y-3.5 border-t border-white/[0.06] p-4 pt-3.5 text-xs">
+                                {/* Candidate Answer */}
+                                <div className="space-y-1">
+                                  <span className="text-[0.68rem] font-semibold uppercase tracking-wider text-muted-foreground">
+                                    Your Answer
+                                  </span>
+                                  <div className="rounded-xl border border-white/[0.06] bg-black/30 p-3 text-secondary-foreground whitespace-pre-line text-[0.85rem] leading-relaxed">
+                                    {fa.answer || "No response recorded."}
+                                  </div>
+                                </div>
+
+                                {/* Examiner Verdict & Overall Feedback */}
+                                {evaluation?.overall_feedback && (
+                                  <div className="space-y-1 rounded-xl border border-primary/20 bg-primary/[0.04] p-3.5">
+                                    <div className="flex items-center justify-between gap-2">
+                                      <span className="flex items-center gap-1.5 font-semibold text-primary uppercase tracking-wider text-[0.7rem]">
+                                        <MessageSquare className="size-3.5" /> Examiner Feedback
+                                      </span>
+                                      <span
+                                        className={cn(
+                                          "rounded-md px-1.5 py-0.5 text-[0.65rem] font-semibold",
+                                          TONE_SOFT[tone]
+                                        )}
+                                      >
+                                        {scoreVerdict(score)}
+                                      </span>
+                                    </div>
+                                    <p className="text-[0.825rem] leading-relaxed text-secondary-foreground pt-1">
+                                      {evaluation.overall_feedback}
+                                    </p>
+                                  </div>
+                                )}
+
+                                {/* Criteria Breakdown if available */}
+                                {evaluation && (
+                                  <div className="space-y-1.5 pt-1">
+                                    <span className="text-[0.68rem] font-semibold uppercase tracking-wider text-muted-foreground">
+                                      Scoring Dimensions
+                                    </span>
+                                    <div className="grid grid-cols-2 gap-2">
+                                      {[
+                                        {
+                                          label: "Correctness",
+                                          crit: evaluation.correctness,
+                                        },
+                                        {
+                                          label: "Clarity",
+                                          crit: evaluation.clarity,
+                                        },
+                                        {
+                                          label: "Depth",
+                                          crit: evaluation.depth,
+                                        },
+                                        {
+                                          label: "Conceptual",
+                                          crit: evaluation.conceptual_understanding,
+                                        },
+                                      ].map((item) => (
+                                        <div
+                                          key={item.label}
+                                          className="rounded-lg border border-white/[0.05] bg-white/[0.02] p-2"
+                                        >
+                                          <div className="flex items-center justify-between text-[0.7rem]">
+                                            <span className="text-muted-foreground font-medium">
+                                              {item.label}
+                                            </span>
+                                            <span className="font-mono font-semibold text-foreground">
+                                              {item.crit?.score ?? 0}/25
+                                            </span>
+                                          </div>
+                                          {item.crit?.explanation && (
+                                            <p className="mt-1 line-clamp-2 text-[0.68rem] text-muted-foreground leading-snug">
+                                              {item.crit.explanation}
+                                            </p>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Improvement suggestion if any */}
+                                {evaluation?.improvement_suggestions &&
+                                  evaluation.improvement_suggestions !== "N/A" && (
+                                    <div className="rounded-xl border border-warning/20 bg-warning/[0.04] p-3 text-secondary-foreground">
+                                      <span className="font-semibold text-warning block mb-1 text-[0.7rem] uppercase tracking-wider">
+                                        Suggestion for Improvement
+                                      </span>
+                                      <p className="text-[0.8rem] leading-relaxed">
+                                        {evaluation.improvement_suggestions}
+                                      </p>
+                                    </div>
+                                  )}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
           </div>

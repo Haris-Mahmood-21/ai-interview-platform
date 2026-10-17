@@ -24,6 +24,10 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str = ""
     JUDGE0_API_KEY: str = ""
     JUDGE0_BASE_URL: str = "https://judge0-ce.p.rapidapi.com"
+    JUDGE0_PYTHON_LANGUAGE_ID: int = 71
+    JUDGE0_JAVASCRIPT_LANGUAGE_ID: int = 63
+    JUDGE0_JAVA_LANGUAGE_ID: int = 62
+    JUDGE0_CPP_LANGUAGE_ID: int = 54
 
     # ChromaDB
     CHROMA_HOST: str = "localhost"

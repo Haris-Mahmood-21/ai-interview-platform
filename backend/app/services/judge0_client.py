@@ -5,10 +5,10 @@ from app.config import settings
 
 # Judge0 language IDs
 LANGUAGE_IDS = {
-    "python": 71,
-    "javascript": 63,
-    "java": 62,
-    "cpp": 54,
+    "python": settings.JUDGE0_PYTHON_LANGUAGE_ID,
+    "javascript": settings.JUDGE0_JAVASCRIPT_LANGUAGE_ID,
+    "java": settings.JUDGE0_JAVA_LANGUAGE_ID,
+    "cpp": settings.JUDGE0_CPP_LANGUAGE_ID,
 }
 
 HEADERS = {
@@ -34,6 +34,12 @@ def submit_code(source_code: str, language: str, stdin: str = "") -> dict:
             "stdout": "",
             "stderr": "",
         }
+
+    # Automatically enable PEP 585 & PEP 563 modern type hints (e.g., list[Shape], dict[str, int])
+    # for Python executions on Python 3.8+ runtimes
+    if language.lower() == "python":
+        if "from __future__ import annotations" not in source_code:
+            source_code = "from __future__ import annotations\n" + source_code
 
     # Step 1: Submit the code
     token = _create_submission(source_code, language_id, stdin)

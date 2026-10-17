@@ -112,6 +112,12 @@ def submit_code_solution(
     # Normalize line endings
     clean_code = data.source_code.replace("\r\n", "\n").replace("\r", "\n")
 
+    # If Python, automatically prepend `from __future__ import annotations`
+    # so modern PEP 585 type hints (e.g., list[Shape], dict[str, int], int | None)
+    # work seamlessly on Python 3.8+ execution environments.
+    if data.language.lower() == "python" and "from __future__ import annotations" not in clean_code:
+        clean_code = "from __future__ import annotations\n" + clean_code
+
     # Run a single test case through Judge0 and return its result dict.
     def _run_test_case(args: tuple[int, dict]) -> dict:
         i, tc = args
@@ -132,13 +138,21 @@ def submit_code_solution(
             and outputs_match(actual_output, expected)
         )
 
+        raw_error = result.get("stderr") or result.get("compile_output") or ""
+        if "'type' object is not subscriptable" in raw_error:
+            raw_error += (
+                "\n\n[Tip: Built-in generic types like list[Shape] are supported in annotations, "
+                "but cannot be parameterized at runtime (e.g. isinstance(x, list[Shape]) or list[Shape]()). "
+                "Use standard list() or import List from typing.]"
+            )
+
         return {
             "test_case": i + 1,
             "passed": passed,
             "expected": expected,
             "actual": actual_output,
             "status": result.get("status_description", ""),
-            "error": result.get("stderr") or result.get("compile_output") or "",
+            "error": raw_error,
             "time": result.get("time"),
         }
 

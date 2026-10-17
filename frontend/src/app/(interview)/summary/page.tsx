@@ -614,18 +614,76 @@ export default function InterviewSummaryPage() {
                             </div>
                           )}
 
-                          {/* Follow-up Q&A if any */}
+                          {/* Follow-up Challenges & Reviews if any */}
                           {res.followupAnswers && res.followupAnswers.length > 0 && (
-                            <div className="mt-2 space-y-2 rounded-xl bg-white/[0.02] p-3.5 border border-white/[0.05]">
-                              <span className="text-[0.7rem] font-bold uppercase tracking-wider text-muted-foreground">
-                                Follow-Up Challenge
-                              </span>
-                              {res.followupAnswers.map((fa, faIdx) => (
-                                <div key={faIdx} className="space-y-1 text-xs">
-                                  <p className="font-semibold text-foreground">Q: {fa.question}</p>
-                                  <p className="italic text-muted-foreground">A: {fa.answer}</p>
-                                </div>
-                              ))}
+                            <div className="mt-3 space-y-3 rounded-2xl bg-white/[0.02] p-4 border border-white/[0.06]">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[0.7rem] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                                  <Sparkles className="size-3 text-primary" /> Follow-Up Challenges ({res.followupAnswers.length})
+                                </span>
+                                <span className="text-[0.65rem] text-muted-foreground">
+                                  AI Probing Questions
+                                </span>
+                              </div>
+
+                              <div className="space-y-3">
+                                {res.followupAnswers.map((fa, faIdx) => {
+                                  const faScore = Math.round(fa.evaluation?.total_score ?? 0);
+                                  const faTone = scoreTone(faScore);
+                                  const faEval = fa.evaluation?.evaluation;
+
+                                  return (
+                                    <div
+                                      key={faIdx}
+                                      className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3.5 space-y-2.5 text-xs"
+                                    >
+                                      {/* Header: Question + Score */}
+                                      <div className="flex items-start justify-between gap-3">
+                                        <div className="flex items-start gap-2 min-w-0 flex-1">
+                                          <span className="font-semibold text-primary shrink-0 mt-0.5">
+                                            Q{faIdx + 1}:
+                                          </span>
+                                          <p className="font-medium text-foreground leading-snug">
+                                            {fa.question}
+                                          </p>
+                                        </div>
+                                        {fa.evaluation && (
+                                          <span
+                                            className={cn(
+                                              "rounded-full px-2 py-0.5 font-mono text-[0.7rem] font-bold shrink-0 tabular-nums",
+                                              TONE_SOFT[faTone]
+                                            )}
+                                          >
+                                            {faScore}%
+                                          </span>
+                                        )}
+                                      </div>
+
+                                      {/* Candidate Answer */}
+                                      <div className="rounded-lg bg-black/25 p-2.5 border border-white/[0.04]">
+                                        <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-muted-foreground block mb-1">
+                                          Your Response
+                                        </span>
+                                        <p className="italic text-secondary-foreground whitespace-pre-line text-[0.8rem] leading-relaxed">
+                                          {fa.answer || "No response submitted."}
+                                        </p>
+                                      </div>
+
+                                      {/* AI Examiner Review */}
+                                      {faEval?.overall_feedback && (
+                                        <div className="rounded-lg bg-brand-cyan/[0.04] p-2.5 border border-brand-cyan/20 space-y-1">
+                                          <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-brand-cyan flex items-center gap-1">
+                                            <MessageSquare className="size-3" /> Examiner Evaluation
+                                          </span>
+                                          <p className="text-[0.78rem] text-secondary-foreground leading-relaxed">
+                                            {faEval.overall_feedback}
+                                          </p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
                             </div>
                           )}
                         </div>
