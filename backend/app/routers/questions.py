@@ -82,12 +82,41 @@ def generate_paper(
     return paper
 
 
+from typing import Any, Union
+import json
+from app.models.response import Response
+from app.models.question import Question
+
+
+class ResultFollowupItem(BaseModel):
+    question: str
+    answer: str
+    evaluation: Optional[dict[str, Any]] = None
+
+
+class AttemptResultItem(BaseModel):
+    question_id: Optional[Union[str, int]] = None
+    question_text: str
+    type: str
+    difficulty: Optional[str] = "medium"
+    test_cases: Optional[Union[list[Any], str]] = None
+    answer: Optional[str] = ""
+    language: Optional[str] = "python"
+    score: Optional[float] = 0.0
+    completed: Optional[bool] = True
+    evaluation: Optional[dict[str, Any]] = None
+    code_result: Optional[dict[str, Any]] = None
+    followup_answers: Optional[list[Any]] = []
+
+
 class SaveAttemptRequest(BaseModel):
     category: str
     mode: str
     coding_score: float
     theory_score: float
     time_taken: int
+    paper_id: Optional[int] = None
+    results: Optional[list[AttemptResultItem]] = []
 
 
 class SaveAttemptResponse(BaseModel):
@@ -114,6 +143,56 @@ def save_attempt(
     )
 
     db.add(attempt)
+    db.flush()
+
+    if data.results:
+        for r in data.results:
+            question_db_id = None
+            if r.question_id is not None and str(r.question_id).isdigit():
+                existing_q = db.query(Question).filter(Question.id == int(r.question_id)).first()
+                if existing_q:
+                    question_db_id = existing_q.id
+
+            if question_db_id is None:
+                new_q = Question(
+                    category=data.category,
+                    type=r.type,
+                    difficulty=r.difficulty or "medium",
+                    question_text=r.question_text,
+                    test_cases=json.dumps(r.test_cases) if isinstance(r.test_cases, (list, dict)) else (r.test_cases or None),
+                )
+                db.add(new_q)
+                db.flush()
+                question_db_id = new_q.id
+
+            feedback_data: dict[str, Any] = {
+                "type": r.type,
+                "difficulty": r.difficulty or "medium",
+                "question_text": r.question_text,
+                "language": r.language or "python",
+            }
+
+            if r.type == "coding":
+                feedback_data["code_result"] = r.code_result
+            else:
+                eval_dict = r.evaluation.get("evaluation", r.evaluation) if r.evaluation else None
+                feedback_data["evaluation"] = eval_dict
+                feedback_data["followup_answers"] = r.followup_answers or []
+                if isinstance(eval_dict, dict):
+                    feedback_data["overall_feedback"] = eval_dict.get("overall_feedback")
+                    feedback_data["improvement_suggestions"] = eval_dict.get("improvement_suggestions")
+
+            is_correct = (r.score or 0) >= 60 if r.type == "theory" else ((r.score or 0) >= 100)
+            resp_row = Response(
+                attempt_id=attempt.id,
+                question_id=question_db_id,
+                user_answer=r.answer or "",
+                ai_feedback=json.dumps(feedback_data),
+                is_correct=is_correct,
+                score=r.score or 0.0,
+            )
+            db.add(resp_row)
+
     db.commit()
     db.refresh(attempt)
 

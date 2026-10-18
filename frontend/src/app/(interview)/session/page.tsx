@@ -71,6 +71,12 @@ const LANGUAGE_LABELS: Record<string, string> = {
 };
 
 const DEFAULT_CODE = "# Write your solution here\n";
+const STARTER_COMMENTS: Record<string, string> = {
+  python: "# Write your solution here\n",
+  javascript: "// Write your solution here\n",
+  java: "// Write your solution here\n",
+  cpp: "// Write your solution here\n",
+};
 
 /** Custom Monaco theme matching the app palette. */
 function defineEditorTheme(monaco: Monaco) {
@@ -138,6 +144,14 @@ export default function SessionPage() {
   const [expandedFollowupIdx, setExpandedFollowupIdx] = useState<number | null>(null);
   const [followupError, setFollowupError] = useState<string | null>(null);
 
+  const handleLanguageChange = (newLang: string) => {
+    const prevStarter = STARTER_COMMENTS[language] || DEFAULT_CODE;
+    if (codeAnswer === prevStarter || codeAnswer.trim() === "") {
+      setCodeAnswer(STARTER_COMMENTS[newLang] || "// Write your solution here\n");
+    }
+    setLanguage(newLang);
+  };
+
   const elapsed = useElapsed(startTime);
 
   const currentQuestion = questions[currentIndex];
@@ -200,20 +214,23 @@ export default function SessionPage() {
         }
       );
 
+      const followupsImmediate =
+        data.followup_questions && data.followup_questions.length > 0
+          ? data.followup_questions
+          : undefined;
+
       setResult(currentIndex, {
         answer: theoryAnswer,
         evaluation: data,
         score: data.total_score,
         completed: true,
+        ...(followupsImmediate ? { followupQuestions: followupsImmediate } : {}),
       });
 
       setLoading(false);
 
-      // Followups depend on the evaluation result, so they can't be fetched
-      // in parallel — but we don't make the user wait for them. The score
-      // and feedback are already on screen; followups (if any) pop in
-      // a moment later.
-      if (data.needs_followup_check) {
+      // If followups were already returned by /theory/evaluate, we don't need a second call!
+      if (!followupsImmediate && data.needs_followup_check) {
         setResult(currentIndex, { followupsLoading: true });
 
         try {
@@ -267,6 +284,7 @@ export default function SessionPage() {
 
       setResult(currentIndex, {
         answer: normalizedCode,
+        language,
         codeResult: data,
         score: data.score,
         completed: true,
@@ -333,15 +351,26 @@ export default function SessionPage() {
   const handleNext = async () => {
     if (isLastQuestion) {
       try {
-        const codingScore = useInterviewStore
-          .getState()
-          .getAverageCodingScore();
+        const storeState = useInterviewStore.getState();
+        const codingScore = storeState.getAverageCodingScore();
+        const theoryScore = storeState.getAverageTheoryScore();
+        const elapsed = storeState.getElapsedSeconds();
 
-        const theoryScore = useInterviewStore
-          .getState()
-          .getAverageTheoryScore();
-
-        const elapsed = useInterviewStore.getState().getElapsedSeconds();
+        const formattedResults = storeState.results.map((r) => ({
+          question_id: r.question.id,
+          type: r.type,
+          answer: r.answer || "",
+          language: r.language || (r.type === "coding" ? language : undefined),
+          score: r.score || 0,
+          completed: r.completed ?? false,
+          question_text: r.question.question_text,
+          difficulty: r.question.difficulty,
+          source: r.question.source,
+          test_cases: r.question.test_cases,
+          code_result: r.codeResult,
+          evaluation: r.evaluation?.evaluation || r.evaluation,
+          followup_answers: r.followupAnswers,
+        }));
 
         const { data } = await api.post("/questions/attempts/save", {
           category,
@@ -349,6 +378,8 @@ export default function SessionPage() {
           coding_score: codingScore,
           theory_score: theoryScore,
           time_taken: elapsed,
+          paper_id: paperId,
+          results: formattedResults,
         });
 
         if (data?.attempt_id) {
@@ -362,7 +393,7 @@ export default function SessionPage() {
       router.push("/summary");
     } else {
       setTheoryAnswer("");
-      setCodeAnswer(DEFAULT_CODE);
+      setCodeAnswer(STARTER_COMMENTS[language] || DEFAULT_CODE);
       setActiveFollowup(null);
       setFollowupAnswer("");
       setFollowupError(null);
@@ -610,7 +641,7 @@ export default function SessionPage() {
                         key={l}
                         role="tab"
                         aria-selected={language === l}
-                        onClick={() => setLanguage(l)}
+                        onClick={() => handleLanguageChange(l)}
                         className={cn(
                           "rounded-md px-2.5 py-1 font-mono text-xs transition-colors",
                           language === l
@@ -625,7 +656,7 @@ export default function SessionPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setCodeAnswer(DEFAULT_CODE)}
+                    onClick={() => setCodeAnswer(STARTER_COMMENTS[language] || DEFAULT_CODE)}
                     className="text-muted-foreground"
                     title="Reset code"
                   >

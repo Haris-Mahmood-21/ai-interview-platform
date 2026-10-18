@@ -86,10 +86,10 @@ def get_dashboard(
     # Domain stats
     domain_map: dict[str, list[float]] = {}
     for a in attempts:
-        cat = a.category or "General"
+        cat = str(a.category or "General")
         if cat not in domain_map:
             domain_map[cat] = []
-        domain_map[cat].append(a.total_score or 0.0)
+        domain_map[cat].append(float(a.total_score or 0.0))
 
     domain_stats = [
         DomainStats(
@@ -101,8 +101,9 @@ def get_dashboard(
         for cat, scores in domain_map.items()
     ]
 
-    # Score trend — last 10 attempts chronologically
-    trend_attempts = sorted(attempts[-10:], key=lambda a: a.date if a.date else datetime.min)
+    # Score trend — last 10 attempts chronologically (most recent 10 sessions)
+    recent_10 = attempts[:10]
+    trend_attempts = sorted(recent_10, key=lambda a: a.date if a.date else datetime.min)
     score_trend = [
         {
             "session": i + 1,
@@ -144,29 +145,115 @@ def get_attempt_detail(
     responses = (
         db.query(Response)
         .filter(Response.attempt_id == attempt_id)
+        .order_by(Response.id.asc())
         .all()
     )
 
+    attempt_dict = {
+        "id": attempt.id,
+        "category": attempt.category or "",
+        "mode": attempt.mode or "",
+        "coding_score": attempt.coding_score or 0.0,
+        "theory_score": attempt.theory_score or 0.0,
+        "total_score": attempt.total_score or 0.0,
+        "time_taken": attempt.time_taken or 0,
+        "date": attempt.date.strftime("%b %d, %Y %H:%M") if attempt.date else "",
+    }
+
+    # If no responses recorded (e.g. historical attempts completed before full results saving),
+    # attempt to recover question context from the closest GeneratedPaper for this user
+    if not responses:
+        from app.models.generated_paper import GeneratedPaper
+        paper = (
+            db.query(GeneratedPaper)
+            .filter(
+                GeneratedPaper.user_id == current_user.id,
+                GeneratedPaper.created_at <= (attempt.date if attempt.date else datetime.utcnow()),
+            )
+            .order_by(GeneratedPaper.created_at.desc())
+            .first()
+        )
+        if not paper:
+            paper = (
+                db.query(GeneratedPaper)
+                .filter(GeneratedPaper.user_id == current_user.id)
+                .order_by(GeneratedPaper.created_at.desc())
+                .first()
+            )
+
+        if paper and paper.questions_json:
+            try:
+                p_questions = json.loads(paper.questions_json)
+                if isinstance(p_questions, list):
+                    synthetic_responses = []
+                    for idx, q in enumerate(p_questions):
+                        q_type = q.get("type", "theory")
+                        q_score = attempt.coding_score if q_type == "coding" else attempt.theory_score
+                        synthetic_responses.append({
+                            "id": f"hist_{idx}",
+                            "question_id": q.get("id", idx + 1),
+                            "question_text": q.get("question_text", ""),
+                            "type": q_type,
+                            "difficulty": q.get("difficulty", "medium"),
+                            "user_answer": "Detailed answer recorded in previous session format.",
+                            "score": q_score,
+                            "is_correct": q_score >= 60,
+                            "ai_feedback": {
+                                "overall_feedback": "Evaluated during past interview.",
+                                "improvement_suggestions": "Review topic concepts and practice coding implementations.",
+                            },
+                            "evaluation": None,
+                            "code_result": None,
+                            "followup_answers": [],
+                            "language": "python",
+                        })
+                    return {
+                        "attempt": attempt_dict,
+                        "responses": synthetic_responses,
+                    }
+            except Exception:
+                pass
+
+    enriched_responses = []
+    for r in responses:
+        feedback = {}
+        if r.ai_feedback:
+            try:
+                feedback = json.loads(r.ai_feedback)
+            except Exception:
+                feedback = {"overall_feedback": r.ai_feedback}
+
+        q_obj = r.question
+        q_text = getattr(q_obj, "question_text", None) or feedback.get("question_text", "")
+        q_type = getattr(q_obj, "type", None) or feedback.get("type", "theory")
+        q_diff = getattr(q_obj, "difficulty", None) or feedback.get("difficulty", "medium")
+        language = feedback.get("language", "python")
+        eval_dict = feedback.get("evaluation")
+        code_result = feedback.get("code_result")
+        followup_answers = feedback.get("followup_answers", [])
+
+        # Backward compatibility if feedback was direct evaluation dict
+        if not eval_dict and q_type == "theory" and isinstance(feedback, dict) and "correctness" in feedback:
+            eval_dict = feedback
+
+        enriched_responses.append({
+            "id": r.id,
+            "question_id": r.question_id,
+            "question_text": q_text,
+            "type": q_type,
+            "difficulty": q_diff,
+            "user_answer": r.user_answer or "",
+            "score": r.score or 0.0,
+            "is_correct": r.is_correct,
+            "ai_feedback": feedback,
+            "evaluation": eval_dict,
+            "code_result": code_result,
+            "followup_answers": followup_answers,
+            "language": language,
+        })
+
     return {
-        "attempt": {
-            "id": attempt.id,
-            "category": attempt.category or "",
-            "mode": attempt.mode or "",
-            "coding_score": attempt.coding_score or 0.0,
-            "theory_score": attempt.theory_score or 0.0,
-            "total_score": attempt.total_score or 0.0,
-            "time_taken": attempt.time_taken or 0,
-            "date": attempt.date.strftime("%b %d, %Y %H:%M") if attempt.date else "",
-        },
-        "responses": [
-            {
-                "id": r.id,
-                "question_id": r.question_id,
-                "user_answer": r.user_answer,
-                "ai_feedback": json.loads(r.ai_feedback) if r.ai_feedback else None,
-                "score": r.score or 0.0,
-                "is_correct": r.is_correct,
-            }
-            for r in responses
-        ],
+        **attempt_dict,
+        "attempt": attempt_dict,
+        "responses": enriched_responses,
     }

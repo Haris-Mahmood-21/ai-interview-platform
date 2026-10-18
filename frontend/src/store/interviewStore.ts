@@ -9,6 +9,7 @@ export interface QuestionResult {
   question: Question;
   type: "coding" | "theory";
   answer: string;
+  language?: string;
   evaluation?: TheoryEvaluationResponse;
   followupQuestions?: string[];
   followupsLoading?: boolean;

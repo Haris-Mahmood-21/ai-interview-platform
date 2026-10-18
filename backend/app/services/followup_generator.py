@@ -1,6 +1,8 @@
 import json
 import re
 
+from typing import Any
+
 from app.services.gemini_client import call_gemini
 
 # Score thresholds
@@ -28,7 +30,7 @@ def should_ask_followup(evaluation: dict) -> tuple[bool, int]:
         return True, 2
 
 
-def get_weak_criteria(evaluation: dict) -> list[str]:
+def get_weak_criteria(evaluation: dict) -> list[dict[str, Any]]:
     """
     Return a list of criteria where the candidate scored below threshold.
     Ordered from weakest to strongest so we probe the worst gap first.

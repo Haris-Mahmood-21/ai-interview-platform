@@ -40,11 +40,10 @@ def call_gemini(
             to enforce structured JSON output.
     """
     client = get_gemini_client()
-    config_args = {"max_output_tokens": max_output_tokens}
-    if response_mime_type:
-        config_args["response_mime_type"] = response_mime_type
-
-    config = types.GenerateContentConfig(**config_args)
+    config = types.GenerateContentConfig(
+        max_output_tokens=max_output_tokens,
+        response_mime_type=response_mime_type,
+    )
 
     response = client.models.generate_content(
         model="gemini-2.5-flash",

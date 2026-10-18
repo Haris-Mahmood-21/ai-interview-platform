@@ -49,6 +49,8 @@ export interface TheoryEvaluationResponse {
   evaluation: TheoryEvaluation;
   needs_followup_check: boolean;
   total_score: number;
+  followup_questions?: string[];
+  has_followups?: boolean;
 }
 
 export interface FollowupResponse {
@@ -67,11 +69,46 @@ export interface CodeTestResult {
 }
 
 export interface CodeSubmissionResponse {
-  question_id: number;
+  question_id: number | string;
   results: CodeTestResult[];
   score: number;
   passed_count: number;
   total_count: number;
+  language?: string;
+}
+
+export interface FollowupAnswerItem {
+  question: string;
+  answer: string;
+  evaluation?: TheoryEvaluationResponse | TheoryEvaluation | null;
+}
+
+export interface AttemptResponseItem {
+  id: number;
+  question_id: number | string;
+  user_answer: string;
+  score: number;
+  type: "coding" | "theory";
+  difficulty: "easy" | "medium" | "hard";
+  question_text: string;
+  language?: string | null;
+  test_cases?: TestCase[] | null;
+  code_result?: CodeSubmissionResponse | null;
+  evaluation?: TheoryEvaluation | null;
+  followup_answers?: FollowupAnswerItem[] | null;
+}
+
+export interface AttemptDetail {
+  id: number;
+  date: string;
+  mode: string;
+  category: string;
+  total_score: number;
+  coding_score: number;
+  theory_score: number;
+  time_taken: number;
+  paper_id?: number | null;
+  responses: AttemptResponseItem[];
 }
 
 export interface ResumeProfile {

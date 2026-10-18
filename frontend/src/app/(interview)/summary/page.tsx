@@ -81,7 +81,7 @@ export default function InterviewSummaryPage() {
     if (!hasStoreResults && attemptIdParam) {
       api
         .get(`/dashboard/attempts/${attemptIdParam}`)
-        .then((res) => setFallbackData(res.data))
+        .then((res) => setFallbackData(res.data?.attempt ? res.data : { attempt: res.data }))
         .catch(() => {})
         .finally(() => setFallbackLoading(false));
     }
@@ -391,19 +391,19 @@ export default function InterviewSummaryPage() {
             <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
               <div className="rounded-lg bg-white/[0.03] p-2">
                 <span className="text-muted-foreground">Correctness</span>
-                <p className="font-semibold text-foreground tabular-nums">{rubricAverages.correctness}%</p>
+                <p className="font-semibold text-foreground tabular-nums">{rubricAverages.correctness}/25</p>
               </div>
               <div className="rounded-lg bg-white/[0.03] p-2">
                 <span className="text-muted-foreground">Clarity</span>
-                <p className="font-semibold text-foreground tabular-nums">{rubricAverages.clarity}%</p>
+                <p className="font-semibold text-foreground tabular-nums">{rubricAverages.clarity}/25</p>
               </div>
               <div className="rounded-lg bg-white/[0.03] p-2">
                 <span className="text-muted-foreground">Depth</span>
-                <p className="font-semibold text-foreground tabular-nums">{rubricAverages.depth}%</p>
+                <p className="font-semibold text-foreground tabular-nums">{rubricAverages.depth}/25</p>
               </div>
               <div className="rounded-lg bg-white/[0.03] p-2">
                 <span className="text-muted-foreground">Concepts</span>
-                <p className="font-semibold text-foreground tabular-nums">{rubricAverages.conceptual}%</p>
+                <p className="font-semibold text-foreground tabular-nums">{rubricAverages.conceptual}/25</p>
               </div>
             </div>
           ) : (
@@ -499,8 +499,8 @@ export default function InterviewSummaryPage() {
                         {isCoding ? (
                           <div className="overflow-hidden rounded-xl border border-white/10 bg-[#0d1117]">
                             <div className="flex items-center justify-between border-b border-white/10 bg-white/[0.03] px-3.5 py-1.5 text-xs text-muted-foreground">
-                              <span className="flex items-center gap-1.5">
-                                <Terminal className="size-3.5" /> Python Solution
+                              <span className="flex items-center gap-1.5 capitalize">
+                                <Terminal className="size-3.5" /> {res.language ? `${res.language} Solution` : "Code Solution"}
                               </span>
                               <span>{res.answer?.split("\n").length || 0} lines</span>
                             </div>
@@ -583,7 +583,7 @@ export default function InterviewSummaryPage() {
                                   <div key={item.label} className="rounded-xl bg-white/[0.03] p-2.5 text-center">
                                     <span className="text-[0.7rem] text-muted-foreground">{item.label}</span>
                                     <p className="font-display text-base font-bold tabular-nums text-foreground mt-0.5">
-                                      {item.val ?? 0}%
+                                      {item.val ?? 0}/25
                                     </p>
                                   </div>
                                 ))}

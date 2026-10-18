@@ -66,7 +66,7 @@ def detect_sections(text: str) -> dict:
             header_map[h.lower()] = section_key
 
     lines = text.splitlines()
-    sections = {k: [] for k in section_headers}
+    sections: dict[str, list[str]] = {k: [] for k in section_headers}
     current_section = None
 
     for line in lines:

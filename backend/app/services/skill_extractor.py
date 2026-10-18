@@ -28,6 +28,16 @@ TECH_KEYWORDS = {
 }
 
 
+def _build_keyword_regex(keyword: str) -> re.Pattern:
+    escaped = re.escape(keyword)
+    if keyword.isalnum():
+        return re.compile(rf"\b{escaped}\b", re.IGNORECASE)
+    return re.compile(rf"(?<!\w){escaped}(?!\w)", re.IGNORECASE)
+
+
+KEYWORD_PATTERNS = {kw: _build_keyword_regex(kw) for kw in TECH_KEYWORDS}
+
+
 def extract_skills(sections: dict) -> list[str]:
     """
     Extract skills from the skills section using keyword matching,
@@ -36,16 +46,16 @@ def extract_skills(sections: dict) -> list[str]:
     found = set()
 
     # 1. Keyword match on the skills section text
-    skills_text = sections.get("skills", "").lower()
-    for keyword in TECH_KEYWORDS:
-        if keyword in skills_text:
+    skills_text = sections.get("skills", "")
+    for keyword, pattern in KEYWORD_PATTERNS.items():
+        if pattern.search(skills_text):
             found.add(keyword)
 
     # 2. Keyword match on experience and projects too
     for section in ["experience", "projects"]:
-        text = sections.get(section, "").lower()
-        for keyword in TECH_KEYWORDS:
-            if keyword in text:
+        text = sections.get(section, "")
+        for keyword, pattern in KEYWORD_PATTERNS.items():
+            if pattern.search(text):
                 found.add(keyword)
 
     # 3. spaCy NER — catch proper nouns that look like tech tools
@@ -74,7 +84,7 @@ def extract_projects(sections: dict) -> list[dict]:
     # (short lines, possibly followed by a dash or colon)
     lines = projects_text.splitlines()
     current_title = None
-    current_desc = []
+    current_desc: list[str] = []
 
     for line in lines:
         line = line.strip()

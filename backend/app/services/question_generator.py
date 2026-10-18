@@ -169,7 +169,7 @@ def generate_questions_with_llm(
     user_id: int,
     domain: str,
     mode: str,
-) -> list[dict]:
+) -> tuple[list[dict], str]:
     """
     Core function: ask Gemini to generate a full interview paper.
     Returns a validated list of question dicts.
@@ -376,6 +376,19 @@ DOMAIN_KEYWORDS = {
 }
 
 
+def _build_domain_keyword_pattern(kw: str) -> re.Pattern:
+    escaped = re.escape(kw)
+    if kw.replace(" ", "").isalnum():
+        return re.compile(rf"\b{escaped}\b", re.IGNORECASE)
+    return re.compile(rf"(?<!\w){escaped}(?!\w)", re.IGNORECASE)
+
+
+DOMAIN_KEYWORD_PATTERNS = {
+    domain: [_build_domain_keyword_pattern(kw) for kw in keywords]
+    for domain, keywords in DOMAIN_KEYWORDS.items()
+}
+
+
 def infer_domain_from_profile(
     skills: list[str],
     projects: list[dict],
@@ -387,18 +400,18 @@ def infer_domain_from_profile(
     categories — replaced with simple keyword matching so paper generation
     doesn't pay for a second round-trip to the LLM.
     """
-    text = " ".join(skills).lower()
+    text = " ".join(skills)
     text += " " + " ".join(
         f"{p.get('title', '')} {p.get('description', '')}" for p in projects
-    ).lower()
+    )
 
     scores = {domain: 0 for domain in DOMAIN_KEYWORDS}
-    for domain, keywords in DOMAIN_KEYWORDS.items():
-        for kw in keywords:
-            if kw in text:
+    for domain, patterns in DOMAIN_KEYWORD_PATTERNS.items():
+        for pat in patterns:
+            if pat.search(text):
                 scores[domain] += 1
 
-    best_domain = max(scores, key=scores.get)
+    best_domain = max(scores, key=lambda d: scores[d])
     if scores[best_domain] > 0:
         return best_domain
 
