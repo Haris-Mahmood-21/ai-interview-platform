@@ -14,7 +14,10 @@ def get_gemini_client() -> genai.Client:
     if _client is None:
         _client = genai.Client(
             api_key=settings.GEMINI_API_KEY,
-            http_options=types.HttpOptions(timeout=GEMINI_TIMEOUT * 1000),
+            http_options=types.HttpOptions(
+                api_version="v1beta",
+                timeout=GEMINI_TIMEOUT * 1000,
+            ),
         )
     return _client
 

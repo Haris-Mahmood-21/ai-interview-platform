@@ -75,10 +75,15 @@ def ingest_file(filepath: Path, domain_key: str, collection) -> int:
     return len(chunks)
 
 
-def ingest_all():
+def ingest_all(force: bool = False):
     """Ingest all source files from all domains into ChromaDB."""
     sources_dir = Path(__file__).parent / "sources"
     collection = get_or_create_collection("knowledge_base")
+
+    existing_count = collection.count()
+    if existing_count > 0 and not force:
+        print(f"⚠ Knowledge base already has {existing_count} chunks in ChromaDB. Skipping ingestion.")
+        return
 
     total_chunks = 0
 

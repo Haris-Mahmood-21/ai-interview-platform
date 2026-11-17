@@ -87,10 +87,9 @@ flowchart TD
 ## 🚀 Getting Started
 
 ### 1. Prerequisites
-- [Docker & Docker Compose](https://www.docker.com/)
-- [Node.js 20+](https://nodejs.org/) & [pnpm](https://pnpm.io/) (or `npm`)
-- [Python 3.11+](https://www.python.org/) & [Poetry](https://python-poetry.org/)
+- [Docker & Docker Compose](https://www.docker.com/) (required for full-stack containerized run)
 - API Keys: [Google Gemini API Key](https://aistudio.google.com/) & [Judge0 API Key](https://rapidapi.com/judge0-official/api/judge0-ce)
+- *(Optional for local non-Docker development)*: [Node.js 22+](https://nodejs.org/) & [pnpm](https://pnpm.io/), [Python 3.11+](https://www.python.org/) & [Poetry](https://python-poetry.org/)
 
 ### 2. Clone the Repository
 ```bash
@@ -98,10 +97,36 @@ git clone https://github.com/Haris-Mahmood-21/ai-interview-platform.git
 cd ai-interview-platform
 ```
 
-### 3. Start Infrastructure Services
-Start PostgreSQL and ChromaDB containers:
+### 3. Quick Start (Full-Stack Docker — Recommended)
+Run the entire stack (PostgreSQL, ChromaDB, FastAPI Backend, and Next.js Frontend) in one command:
+
 ```bash
-docker compose up -d
+# Copy root environment template and add your GEMINI_API_KEY, JUDGE0_API_KEY, and SECRET_KEY
+cp .env.example .env
+
+# Build and start all services (migrations, question seeding, and RAG ingestion run automatically)
+docker compose up --build -d
+```
+
+- **Web Application:** [http://localhost:3000](http://localhost:3000)
+- **Backend API & Swagger UI:** [http://localhost:8000/docs](http://localhost:8000/docs)
+- **ChromaDB:** `http://localhost:8001`
+- **PostgreSQL:** `localhost:5432`
+
+To view logs or stop the stack:
+```bash
+docker compose logs -f
+docker compose down
+```
+
+---
+
+### 4. Manual Local Development Setup (Alternative)
+If you prefer running the backend and frontend directly on your host machine:
+
+#### Start Infrastructure Services
+```bash
+docker compose up -d postgres chromadb
 ```
 
 ### 4. Backend Setup
